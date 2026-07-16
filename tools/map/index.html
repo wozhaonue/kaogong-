@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>中国真实 GIS 地貌图谱</title>
+    <link rel="stylesheet" href="./vendor/maplibre-gl.css?v=2026-07-15-2" />
+    <link rel="stylesheet" href="./styles.css?v=2026-07-15-2" />
+  </head>
+  <body>
+    <a class="site-home-link" href="../../index.html">返回工具首页</a>
+    <div class="page-shell">
+      <aside class="panel panel-left">
+        <div class="panel-section panel-header">
+          <p class="eyebrow">City Search</p>
+          <h1>中国真实 GIS 地貌图谱</h1>
+          <p class="panel-copy">
+            真实省界、真实河湖与真实地形阴影叠加显示，支持城市搜索和山河湖自定义标注。
+          </p>
+        </div>
+
+        <div class="panel-section panel-group">
+          <label class="field-label" for="city-search">搜索城市</label>
+          <input id="city-search" class="text-input" type="search" placeholder="输入城市或省份，如 杭州 / 浙江 / 北京" autocomplete="off" />
+          <ul id="city-results" class="search-results card-list"></ul>
+        </div>
+
+        <div class="panel-section panel-group">
+          <div class="section-heading">
+            <h2>添加对象</h2>
+            <span id="draw-mode-indicator" class="draw-mode-indicator">未开始绘制</span>
+          </div>
+
+          <form id="feature-form" class="feature-form">
+            <label class="field-label" for="feature-type">类型</label>
+            <select id="feature-type" class="text-input">
+              <option value="mountain">山</option>
+              <option value="river">河流</option>
+              <option value="lake">湖泊</option>
+            </select>
+
+            <label class="field-label" for="feature-name">名称</label>
+            <input id="feature-name" class="text-input" type="text" placeholder="输入自定义名称" />
+
+            <label class="field-label" for="feature-description">说明</label>
+            <textarea id="feature-description" class="text-input text-area" placeholder="可选：补充说明"></textarea>
+
+            <div class="button-row">
+              <button id="start-drawing" class="button button-primary" type="button">开始绘制</button>
+              <button id="finish-drawing" class="button" type="button">完成对象</button>
+              <button id="cancel-drawing" class="button button-muted" type="button">取消</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="panel-section panel-group">
+          <label class="field-label" for="theme-select">地图主题</label>
+          <select id="theme-select" class="text-input">
+            <option value="terrain-atlas">terrain-atlas</option>
+            <option value="natural-water">natural-water</option>
+            <option value="relief-contrast">relief-contrast</option>
+          </select>
+        </div>
+
+        <div class="panel-section panel-note helper-text">
+          先搜索并选中城市，再开始绘制。山体需要点击地图确定位置后，再点“完成对象”保存；河流与湖泊通过地图采点后手动保存。
+        </div>
+      </aside>
+
+      <main class="map-stage">
+        <div id="map"></div>
+        <div class="map-overlay">
+          <div class="stat-card">
+            <span>Province / River / Lake / Terrain</span>
+            <strong>真实 GIS 图层已叠加</strong>
+          </div>
+        </div>
+      </main>
+
+      <aside class="panel panel-right">
+        <div class="panel-section panel-header">
+          <p class="eyebrow">Feature Index</p>
+          <h2>已添加对象</h2>
+          <p class="panel-copy">点击列表项后，地图中会进入强化显示。</p>
+        </div>
+
+        <div class="panel-section list-section panel-scroll-area">
+          <div class="list-group">
+            <div class="list-group-title">山</div>
+            <ul id="mountain-list" class="feature-list card-list"></ul>
+          </div>
+          <div class="list-group">
+            <div class="list-group-title">河流</div>
+            <ul id="river-list" class="feature-list card-list"></ul>
+          </div>
+          <div class="list-group">
+            <div class="list-group-title">湖泊</div>
+            <ul id="lake-list" class="feature-list card-list"></ul>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <script src="./vendor/maplibre-gl.js?v=2026-07-15-2"></script>
+    <script type="module" src="./app.js?v=2026-07-15-2"></script>
+  </body>
+  </html>

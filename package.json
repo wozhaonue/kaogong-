@@ -1,0 +1,16 @@
+{
+  "name": "china-gis-atlas",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepare:vendor": "node scripts/copy-maplibre.mjs",
+    "prepare:data": "node scripts/preprocess-data.mjs",
+    "start": "node server.mjs",
+    "build:data": "node scripts/preprocess-data.mjs"
+  },
+  "dependencies": {
+    "maplibre-gl": "5.24.0",
+    "sharp": "0.35.3"
+  }
+}

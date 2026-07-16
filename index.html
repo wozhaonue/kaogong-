@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>前端工具入口</title>
+    <meta
+      name="description"
+      content="一个部署在 GitHub Pages 上的纯前端工具入口站，包含地图图谱与其他前端工具页面。"
+    />
+    <link rel="stylesheet" href="./styles/landing.css?v=2026-07-15-3" />
+  </head>
+  <body>
+    <div class="portal-shell">
+      <header class="hero">
+        <p class="hero-kicker">前端工具入口</p>
+        <h1>纯前端工具集合</h1>
+        <p class="hero-copy">
+          一个采用纯前端三件套构建的静态工具门户。首页只负责提供清晰入口，每个工具都以独立子页面形式组织，可直接部署到 GitHub Pages。
+        </p>
+        <div class="hero-actions">
+          <a class="hero-button hero-button-primary" href="#tool-grid">浏览工具</a>
+          <a class="hero-button" href="https://pages.github.com/" target="_blank" rel="noreferrer">部署说明</a>
+        </div>
+      </header>
+
+      <main class="tool-stage">
+        <section class="tool-panel">
+          <div class="panel-head">
+            <div>
+              <p class="panel-kicker">工具列表</p>
+              <h2>已接入工具</h2>
+            </div>
+            <p class="panel-copy">点击卡片进入对应工具页面。地图图谱已经作为独立子页接入当前门户结构。</p>
+          </div>
+          <div id="tool-grid" class="tool-grid"></div>
+        </section>
+
+        <aside class="info-panel">
+          <section class="info-card info-card-compact">
+            <p class="info-kicker">站点说明</p>
+            <h3>静态部署结构</h3>
+            <ul class="info-list">
+              <li>首页位于根路径，作为统一入口。</li>
+              <li>每个工具位于 `tools/` 下的独立目录。</li>
+              <li>全站使用相对路径，适合直接发布到 GitHub Pages。</li>
+            </ul>
+          </section>
+        </aside>
+      </main>
+    </div>
+
+    <script type="module" src="./scripts/landing.js?v=2026-07-15-3"></script>
+  </body>
+</html>

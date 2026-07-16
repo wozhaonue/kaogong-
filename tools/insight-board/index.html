@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>情报看板</title>
+    <style>
+      :root {
+        --bg: #10151c;
+        --panel: #161f29;
+        --line: rgba(244, 193, 109, 0.2);
+        --ink: #f7f4ee;
+        --muted: rgba(236, 229, 220, 0.72);
+        --accent: #f4c16d;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        padding: 32px;
+        display: grid;
+        place-items: center;
+        font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at top right, rgba(244, 193, 109, 0.14), transparent 30%),
+          linear-gradient(180deg, #1a2028 0%, var(--bg) 100%);
+      }
+      .panel {
+        width: min(840px, 100%);
+        padding: 28px;
+        border: 1px solid var(--line);
+        border-radius: 28px;
+        background: linear-gradient(180deg, rgba(26, 34, 44, 0.96), rgba(18, 24, 31, 0.92));
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+      }
+      h1 {
+        margin: 0;
+        font-family: "Noto Serif SC", "Source Han Serif SC", serif;
+        font-size: 40px;
+      }
+      p { color: var(--muted); line-height: 1.8; }
+      a {
+        color: var(--accent);
+        text-decoration: none;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="panel">
+      <h1>情报看板</h1>
+      <p>这是另一个示例子工具页，用于承载后续的统计卡片、信息汇总或导航型工具页面。</p>
+      <p>GitHub Pages 上这类页面可以和地图页一样，直接作为静态子目录发布。</p>
+      <p><a href="../../index.html">返回工具首页</a></p>
+    </main>
+  </body>
+</html>
