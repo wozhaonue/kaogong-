@@ -1,5 +1,13 @@
 const tools = [
   {
+    title: "政策法典库",
+    description: "Scholar's Nook 风格的法律法典与时政积累工作台，支持法典条目管理、双视图检索与 Markdown 文稿编辑。",
+    tag: "法治 / 时政",
+    href: "./tools/policy-codex/index.html",
+    status: "已上线",
+    chips: ["法典管理", "Markdown 编辑", "本地持久化"]
+  },
+  {
     title: "中国地图图谱",
     description: "真实 GIS 风格中国地图与自定义地理标注工具，已作为独立子页接入当前门户结构。",
     tag: "地图 / GIS",

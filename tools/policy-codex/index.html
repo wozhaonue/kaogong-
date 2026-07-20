@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Scholar's Nook 政策法典库</title>
+    <meta
+      name="description"
+      content="Scholar's Nook 风格的政策法典与时政积累工作台，支持法典管理、两种法典视图、Markdown 文章编辑与本地持久化。"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css?v=2026-07-20-1" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand-block">
+          <a class="brand-link" href="../../index.html">Scholar's Nook</a>
+          <p class="brand-subtitle">政策法典与时政积累工作台</p>
+        </div>
+
+        <nav class="workspace-tabs" aria-label="主模块切换">
+          <button class="workspace-tab" type="button" data-tab-target="articles">
+            Articles
+          </button>
+          <button class="workspace-tab" type="button" data-tab-target="codex">
+            Codex
+          </button>
+        </nav>
+
+        <div class="topbar-tools">
+          <label class="search-pill">
+            <span class="material-symbols-outlined" aria-hidden="true">search</span>
+            <input
+              id="global-search"
+              type="search"
+              autocomplete="off"
+              placeholder="Search the archive..."
+            />
+          </label>
+          <button class="icon-button" id="reset-demo" type="button" title="重置演示数据">
+            <span class="material-symbols-outlined" aria-hidden="true">refresh</span>
+          </button>
+          <div class="identity-chip" aria-hidden="true">SN</div>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <section class="module module-articles" data-module="articles">
+          <aside class="library-sidebar">
+            <div class="sidebar-head">
+              <div>
+                <p class="eyebrow">Policy Papers</p>
+                <h1>文章库</h1>
+              </div>
+              <button class="round-button brass-button" id="new-article" type="button">
+                <span class="material-symbols-outlined" aria-hidden="true">add</span>
+                新建
+              </button>
+            </div>
+
+            <div class="sidebar-filters">
+              <label class="field-shell">
+                <span class="material-symbols-outlined" aria-hidden="true">filter_list</span>
+                <input id="article-query" type="search" placeholder="按标题、来源或标签筛选" />
+              </label>
+            </div>
+
+            <div class="sidebar-list" id="article-list" aria-live="polite"></div>
+          </aside>
+
+          <section class="folio-stage">
+            <div class="folio-toolbar">
+              <div class="toolbar-group">
+                <button class="round-button brass-button" id="save-article" type="button">
+                  <span class="material-symbols-outlined" aria-hidden="true">save</span>
+                  保存
+                </button>
+                <button class="round-button" id="duplicate-article" type="button">
+                  <span class="material-symbols-outlined" aria-hidden="true">library_add</span>
+                  复制
+                </button>
+              </div>
+              <div class="toolbar-group toolbar-group-light">
+                <button class="icon-button" id="delete-article" type="button" title="删除文章">
+                  <span class="material-symbols-outlined" aria-hidden="true">delete</span>
+                </button>
+              </div>
+            </div>
+
+            <article class="folio-sheet">
+              <div class="folio-meta">
+                <div class="folio-title-block">
+                  <input id="article-title" class="title-input" type="text" placeholder="标题" />
+                  <div class="meta-row">
+                    <label class="compact-field">
+                      <span>分类</span>
+                      <select id="article-category">
+                        <option value="重大会议">重大会议</option>
+                        <option value="讲话">讲话</option>
+                      </select>
+                    </label>
+                    <label class="compact-field">
+                      <span>日期</span>
+                      <input id="article-date" type="date" />
+                    </label>
+                    <label class="compact-field">
+                      <span>来源</span>
+                      <input id="article-source" type="text" placeholder="来源 / 发布机构" />
+                    </label>
+                    <label class="compact-field">
+                      <span>标签</span>
+                      <input id="article-tags" type="text" placeholder="以逗号分隔" />
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="editor-grid">
+                <section class="editor-panel">
+                  <div class="panel-head-inline">
+                    <h2>Markdown</h2>
+                    <div class="format-toolbar" role="toolbar" aria-label="Markdown 工具栏">
+                      <button class="format-button" type="button" data-md-wrap="**" title="粗体">
+                        <span class="material-symbols-outlined" aria-hidden="true">format_bold</span>
+                      </button>
+                      <button class="format-button" type="button" data-md-wrap="*" title="斜体">
+                        <span class="material-symbols-outlined" aria-hidden="true">format_italic</span>
+                      </button>
+                      <button class="format-button" type="button" data-md-prefix="- " title="无序列表">
+                        <span class="material-symbols-outlined" aria-hidden="true">format_list_bulleted</span>
+                      </button>
+                      <button class="format-button" type="button" data-md-link="true" title="链接">
+                        <span class="material-symbols-outlined" aria-hidden="true">link</span>
+                      </button>
+                      <button class="format-button" type="button" data-md-image="true" title="图片语法">
+                        <span class="material-symbols-outlined" aria-hidden="true">image</span>
+                      </button>
+                    </div>
+                  </div>
+                  <textarea
+                    id="article-markdown"
+                    class="markdown-input"
+                    placeholder="在这里编写 Markdown 内容..."
+                  ></textarea>
+                </section>
+
+                <section class="preview-panel">
+                  <div class="panel-head-inline">
+                    <h2>Preview</h2>
+                    <span id="article-save-state" class="status-pill">已保存</span>
+                  </div>
+                  <div id="article-preview" class="markdown-preview prose-surface"></div>
+                </section>
+              </div>
+            </article>
+          </section>
+
+          <a class="return-landing-button" href="../../index.html">
+            <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
+            回到工具入口
+          </a>
+        </section>
+
+        <section class="module module-codex" data-module="codex" hidden>
+          <section class="codex-discovery" id="codex-discovery">
+            <section class="codex-header">
+              <div>
+                <p class="eyebrow">Library Codex</p>
+                <h1>法典书架</h1>
+                <p class="section-copy">管理法律法典、法规摘编与制度条目，先以书架索引呈现，再进入内部条文视图。</p>
+              </div>
+            </section>
+
+            <section class="codex-filters codex-chip-filters">
+              <button class="filter-pill is-active" id="codex-filter-reset" type="button">全部法典</button>
+              <label class="field-shell codex-search-shell">
+                <span class="material-symbols-outlined" aria-hidden="true">search</span>
+                <input id="codex-query" type="search" placeholder="按法典标题、来源或标签搜索" />
+              </label>
+              <label class="field-shell select-shell">
+                <span class="material-symbols-outlined" aria-hidden="true">account_balance</span>
+                <select id="codex-source-filter">
+                  <option value="">全部来源</option>
+                </select>
+              </label>
+              <label class="field-shell select-shell">
+                <span class="material-symbols-outlined" aria-hidden="true">sell</span>
+                <select id="codex-tag-filter">
+                  <option value="">全部标签</option>
+                </select>
+              </label>
+            </section>
+
+            <section class="codex-grid" id="codex-grid" aria-live="polite"></section>
+
+            <button class="codex-fab brass-button" id="new-codex" type="button" title="新建法典">
+              <span class="material-symbols-outlined" aria-hidden="true">add</span>
+            </button>
+          </section>
+
+          <section class="codex-workspace" id="codex-workspace" hidden>
+            <div class="workspace-strip">
+              <div class="workspace-strip-main">
+                <button class="back-link-button" id="codex-back" type="button">
+                  <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
+                </button>
+                <div>
+                  <p class="eyebrow">Folio Entry</p>
+                  <h2 id="codex-title-heading"></h2>
+                </div>
+              </div>
+              <div class="workspace-strip-actions">
+                <button class="round-button" id="edit-codex" type="button">
+                  <span class="material-symbols-outlined" aria-hidden="true">edit_square</span>
+                  编辑法典
+                </button>
+                <button class="round-button" id="new-entry" type="button">
+                  <span class="material-symbols-outlined" aria-hidden="true">note_add</span>
+                  新增条目
+                </button>
+              </div>
+              <div class="view-switch" aria-label="法典视图模式">
+                <button class="view-switch-button" type="button" data-codex-view="list">
+                  <span class="material-symbols-outlined" aria-hidden="true">format_list_bulleted</span>
+                  List
+                </button>
+                <button class="view-switch-button" type="button" data-codex-view="card">
+                  <span class="material-symbols-outlined" aria-hidden="true">grid_view</span>
+                  Card
+                </button>
+              </div>
+            </div>
+
+            <section class="codex-overview-card" id="codex-overview-card"></section>
+
+            <section class="codex-view codex-list-view" id="codex-list-view"></section>
+
+            <section class="codex-view codex-card-view" id="codex-card-view" hidden></section>
+          </section>
+
+          <a class="return-landing-button" href="../../index.html">
+            <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
+            回到工具入口
+          </a>
+        </section>
+      </main>
+
+      <footer class="footer-shell">
+        <div>
+          <div class="footer-brand">Scholar's Nook</div>
+          <p>© 2026 Scholar's Nook. Policy codex archive workspace.</p>
+        </div>
+        <div class="footer-links">
+          <span>Local-first storage</span>
+          <span>Markdown authoring</span>
+          <span>GitHub Pages ready</span>
+        </div>
+      </footer>
+    </div>
+
+    <dialog class="modal-shell" id="codex-modal">
+      <form class="modal-card" method="dialog" id="codex-form">
+        <div class="modal-head">
+          <div>
+            <p class="eyebrow">Codex Metadata</p>
+            <h2 id="codex-modal-title">新建法典</h2>
+          </div>
+          <button class="icon-button" value="cancel" type="submit" title="关闭">
+            <span class="material-symbols-outlined" aria-hidden="true">close</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <label class="stack-field">
+            <span>法典标题</span>
+            <input id="codex-form-title" type="text" />
+          </label>
+          <label class="stack-field">
+            <span>摘要</span>
+            <textarea id="codex-form-summary" rows="4"></textarea>
+          </label>
+          <div class="modal-grid">
+            <label class="stack-field">
+              <span>发布日期</span>
+              <input id="codex-form-date" type="date" />
+            </label>
+            <label class="stack-field">
+              <span>来源 / 颁布机关</span>
+              <input id="codex-form-source" type="text" />
+            </label>
+          </div>
+          <label class="stack-field">
+            <span>标签</span>
+            <input id="codex-form-tags" type="text" placeholder="以逗号分隔" />
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button class="round-button" value="cancel" type="submit">取消</button>
+          <button class="round-button brass-button" id="codex-form-submit" type="submit">保存法典</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal-shell" id="entry-modal">
+      <form class="modal-card modal-card-wide" method="dialog" id="entry-form">
+        <div class="modal-head">
+          <div>
+            <p class="eyebrow">Codex Entry</p>
+            <h2 id="entry-modal-title">新增条目</h2>
+          </div>
+          <button class="icon-button" value="cancel" type="submit" title="关闭">
+            <span class="material-symbols-outlined" aria-hidden="true">close</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="modal-grid">
+            <label class="stack-field">
+              <span>条目编号</span>
+              <input id="entry-form-number" type="text" />
+            </label>
+            <label class="stack-field">
+              <span>条目标题</span>
+              <input id="entry-form-title" type="text" />
+            </label>
+          </div>
+          <label class="stack-field">
+            <span>条目正文</span>
+            <textarea id="entry-form-body" rows="8"></textarea>
+          </label>
+          <label class="stack-field">
+            <span>备注 / 解读</span>
+            <textarea id="entry-form-notes" rows="5"></textarea>
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button class="round-button" value="cancel" type="submit">取消</button>
+          <button class="round-button brass-button" id="entry-form-submit" type="submit">保存条目</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal-shell" id="confirm-modal">
+      <form class="modal-card modal-card-confirm" method="dialog" id="confirm-form">
+        <div class="modal-head modal-head-confirm">
+          <div>
+            <p class="eyebrow">Confirm Action</p>
+            <h2 id="confirm-modal-title">确认操作</h2>
+          </div>
+          <button class="icon-button" value="cancel" type="submit" title="关闭">
+            <span class="material-symbols-outlined" aria-hidden="true">close</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p class="confirm-copy" id="confirm-modal-message"></p>
+        </div>
+        <div class="modal-actions">
+          <button class="round-button" value="cancel" type="submit">取消</button>
+          <button class="round-button brass-button" id="confirm-submit" type="submit">确认</button>
+        </div>
+      </form>
+    </dialog>
+
+    <div class="toast-stack" id="toast-stack" aria-live="polite" aria-atomic="true"></div>
+
+    <template id="empty-state-template">
+      <div class="empty-state">
+        <span class="material-symbols-outlined" aria-hidden="true">ink_pen</span>
+        <h3>当前没有内容</h3>
+        <p>创建第一条记录后，这里会显示符合 Scholar's Nook 设计语言的工作区内容。</p>
+      </div>
+    </template>
+
+    <script type="module" src="./app.js?v=2026-07-20-1"></script>
+  </body>
+</html>
