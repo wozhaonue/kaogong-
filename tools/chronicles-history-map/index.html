@@ -18,7 +18,7 @@
       href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300;400;500;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026-07-20-1" />
+    <link rel="stylesheet" href="./styles.css?v=2026-07-20-2" />
   </head>
   <body>
     <div class="grain-overlay" aria-hidden="true"></div>
@@ -31,16 +31,18 @@
             工具入口
           </button>
         </div>
+
         <div class="toolbar-search">
           <span class="material-symbols-outlined" aria-hidden="true">search</span>
-          <input id="search-input" type="search" placeholder="Search archive..." autocomplete="off" />
+          <input id="search-input" type="search" placeholder="搜索当前时间轴…" autocomplete="off" />
         </div>
+
         <div class="toolbar-actions">
           <div class="mode-toggle" role="tablist" aria-label="视图模式">
-            <button class="mode-button" id="mode-edit" type="button" data-mode="edit">Edit</button>
-            <button class="mode-button" id="mode-display" type="button" data-mode="display">Display</button>
+            <button class="mode-button" id="mode-edit" type="button" data-mode="edit">编辑</button>
+            <button class="mode-button" id="mode-display" type="button" data-mode="display">展示</button>
           </div>
-          <button class="icon-button" id="rename-timeline" type="button" title="重命名时间轴">
+          <button class="icon-button" id="rename-timeline" type="button" title="重命名当前时间轴">
             <span class="material-symbols-outlined" aria-hidden="true">edit_square</span>
           </button>
           <button class="icon-button" id="settings-button" type="button" title="界面说明">
@@ -58,14 +60,14 @@
         <aside class="sidebar" id="sidebar">
           <div class="sidebar-header">
             <div>
-              <h1>Your Archive</h1>
-              <p>Scholarly Collections</p>
+              <h1>你的档案库</h1>
+              <p>历史知识与专题收藏</p>
             </div>
           </div>
 
           <button class="primary-button" id="new-timeline" type="button">
             <span class="material-symbols-outlined" aria-hidden="true">add</span>
-            New Timeline
+            新建时间轴
           </button>
 
           <div class="sidebar-list" id="timeline-list" aria-live="polite"></div>
@@ -77,7 +79,7 @@
             </button>
             <button class="footer-link" id="show-help" type="button">
               <span class="material-symbols-outlined" aria-hidden="true">help</span>
-              Help
+              使用说明
             </button>
           </div>
         </aside>
@@ -101,16 +103,16 @@
             <aside class="legend-card">
               <div class="legend-head">
                 <span class="material-symbols-outlined" aria-hidden="true">info</span>
-                <span>Legend</span>
+                <span>图例</span>
               </div>
               <div class="legend-items">
                 <div class="legend-item">
                   <span class="legend-dot legend-dot-minor"></span>
-                  <span>Minor Event</span>
+                  <span>普通事件</span>
                 </div>
                 <div class="legend-item">
                   <span class="legend-dot legend-dot-major"></span>
-                  <span>Featured Card</span>
+                  <span>重点卡片</span>
                 </div>
               </div>
               <p class="legend-copy" id="legend-copy"></p>
@@ -124,38 +126,38 @@
       <form class="event-sheet" id="event-form" method="dialog">
         <div class="sheet-header">
           <div>
-            <p class="sheet-kicker">Entry Management</p>
-            <h2 id="event-sheet-title">New Event</h2>
+            <p class="sheet-kicker">事件管理</p>
+            <h2 id="event-sheet-title">新建事件</h2>
           </div>
-          <button class="icon-button" id="close-event-sheet" type="submit" value="cancel" title="关闭">
+          <button class="icon-button" type="submit" value="cancel" title="关闭">
             <span class="material-symbols-outlined" aria-hidden="true">close</span>
           </button>
         </div>
 
         <div class="sheet-body">
           <label class="field field-large">
-            <span>Event Name</span>
+            <span>事件名</span>
             <input id="event-name" type="text" />
           </label>
 
           <div class="field-grid">
             <label class="field">
-              <span>Time/Date</span>
+              <span>时间</span>
               <input id="event-time" type="text" />
             </label>
             <label class="field">
-              <span>Dynasty / Era</span>
+              <span>朝代 / 时期</span>
               <input id="event-dynasty" type="text" />
             </label>
           </div>
 
           <label class="field">
-            <span>Associated Artifact / Object</span>
+            <span>事物名 / 关联对象</span>
             <input id="event-artifact" type="text" />
           </label>
 
           <label class="field">
-            <span>Detailed Description</span>
+            <span>详细说明</span>
             <textarea id="event-description" rows="6"></textarea>
           </label>
 
@@ -164,8 +166,8 @@
             <div class="upload-preview" id="upload-preview">
               <div class="upload-placeholder" id="upload-placeholder">
                 <span class="material-symbols-outlined" aria-hidden="true">add_photo_alternate</span>
-                <strong>Click to append visual record</strong>
-                <span>Stored locally in IndexedDB</span>
+                <strong>点击添加图片档案</strong>
+                <span>图片将保存在浏览器本地 IndexedDB</span>
               </div>
               <img id="upload-image" alt="事件图片预览" hidden />
             </div>
@@ -173,10 +175,10 @@
         </div>
 
         <div class="sheet-footer">
-          <button class="ghost-button danger-button" id="delete-event" type="button">Delete</button>
+          <button class="ghost-button danger-button" id="delete-event" type="button">删除事件</button>
           <div class="sheet-actions">
-            <button class="ghost-button" type="submit" value="cancel">Cancel</button>
-            <button class="accent-button" id="save-event" type="submit">Save Record</button>
+            <button class="ghost-button" type="submit" value="cancel">取消</button>
+            <button class="accent-button" id="save-event" type="submit">保存事件</button>
           </div>
         </div>
       </form>
@@ -194,7 +196,7 @@
         </div>
 
         <div class="detail-hero">
-          <img id="detail-image" alt="事件视觉图像" />
+          <img id="detail-image" alt="事件图像" />
           <div class="detail-overlay"></div>
           <div class="detail-badges">
             <span class="detail-badge" id="detail-dynasty-badge"></span>
@@ -218,13 +220,13 @@
     <dialog class="confirm-backdrop" id="confirm-modal">
       <form class="confirm-card" id="confirm-form" method="dialog">
         <div class="confirm-head">
-          <p class="sheet-kicker">Confirm Action</p>
+          <p class="sheet-kicker">确认操作</p>
           <h2 id="confirm-title">确认操作</h2>
         </div>
         <p class="confirm-copy" id="confirm-message"></p>
         <div class="confirm-actions">
-          <button class="ghost-button" type="submit" value="cancel">Cancel</button>
-          <button class="accent-button" id="confirm-submit" type="submit">Confirm</button>
+          <button class="ghost-button" type="submit" value="cancel">取消</button>
+          <button class="accent-button" id="confirm-submit" type="submit">确认</button>
         </div>
       </form>
     </dialog>
@@ -232,22 +234,22 @@
     <dialog class="confirm-backdrop" id="rename-modal">
       <form class="confirm-card rename-card" id="rename-form" method="dialog">
         <div class="confirm-head">
-          <p class="sheet-kicker">Timeline Settings</p>
-          <h2>Rename Timeline</h2>
+          <p class="sheet-kicker">时间轴设置</p>
+          <h2>重命名时间轴</h2>
         </div>
         <label class="field">
-          <span>Timeline Title</span>
+          <span>时间轴标题</span>
           <input id="rename-input" type="text" />
         </label>
         <div class="confirm-actions">
-          <button class="ghost-button" type="submit" value="cancel">Cancel</button>
-          <button class="accent-button" type="submit">Save</button>
+          <button class="ghost-button" type="submit" value="cancel">取消</button>
+          <button class="accent-button" type="submit">保存</button>
         </div>
       </form>
     </dialog>
 
     <div class="toast-stack" id="toast-stack" aria-live="polite" aria-atomic="true"></div>
 
-    <script type="module" src="./app.js?v=2026-07-20-1"></script>
+    <script type="module" src="./app.js?v=2026-07-20-2"></script>
   </body>
 </html>

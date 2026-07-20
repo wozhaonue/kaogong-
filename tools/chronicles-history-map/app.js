@@ -3,24 +3,76 @@ const DB_VERSION = 1;
 const UI_KEY = "chronicles-history-map-ui-v1";
 const CANVAS_MIN_WIDTH = 3400;
 
+const TEXT = {
+  toolTitle: "Chronicles",
+  archiveFallback: "历史档案",
+  editMode: "编辑",
+  displayMode: "展示",
+  timelineListHint: "拖拽可横向浏览；编辑模式下点击金色轴线可新增事件。",
+  timelineDisplayHint: "拖拽可横向浏览；点击事件卡片可查看完整档案。",
+  unnamedTimeline: "未命名时间轴",
+  newTimelineBase: "新时间轴",
+  emptyTimelineTitle: "尚无时间轴",
+  emptyTimelineCopy: "请先创建第一条历史时间轴。",
+  emptyEventTitleEdit: "点击时间轴创建第一条事件",
+  emptyEventCopyEdit: "时间轴本身没有刻度区间，事件位置由你点击轴线的位置决定。",
+  emptyEventTitleDisplay: "当前没有可展示的事件",
+  emptyEventCopyDisplay: "尝试清空搜索词，或切换到另一条时间轴。",
+  detailQuoteFallback: "“该事件当前以时间与名称为核心记录，后续可继续补充文献、器物与图像档案。”",
+  detailArtifactQuote: "“{artifact}”可作为理解该事件的核心物证或关联对象。",
+  metaDynasty: "朝代",
+  metaArtifact: "关联对象",
+  metaUpdatedAt: "更新时间",
+  recordCount: "条记录",
+  featuredCard: "重点卡片",
+  searchPlaceholder: "搜索当前时间轴…",
+  toastDone: "已完成",
+  toastWarning: "提示",
+  toastNeedFields: "保存前请填写时间与事件名。",
+  toastHelp: "拖拽时间轴可扩展浏览范围；编辑模式下点击轴线可新增事件。",
+  toastSettings: "时间轴不设置年代刻度，事件位置由你的点击坐标直接决定。",
+  toastSwitchEdit: "已切换到编辑模式。",
+  toastSwitchDisplay: "已切换到展示模式。",
+  toastCreatedTimeline: "已创建时间轴《{title}》。",
+  toastRenamedTimeline: "时间轴已重命名为《{title}》。",
+  toastDeletedTimeline: "时间轴《{title}》已删除。",
+  toastLastTimeline: "至少保留一条时间轴，当前不可删除。",
+  toastCreatedEvent: "已新增事件《{title}》。",
+  toastUpdatedEvent: "已更新事件《{title}》。",
+  toastDeletedEvent: "已删除事件《{title}》。",
+  confirmDeleteEventTitle: "删除事件",
+  confirmDeleteEventMessage: "确定删除事件“{title}”吗？",
+  confirmDeleteTimelineTitle: "删除时间轴",
+  confirmDeleteTimelineMessage: "确定删除时间轴“{title}”以及其中的全部事件吗？",
+  eventSheetNew: "新建事件",
+  eventSheetEdit: "编辑事件",
+  defaultDescription: "这条记录尚未补充详细说明。",
+  placeholderTitle: "图像档案",
+  placeholderSubtitle: "Chronicles Archive",
+  menuDelete: "删除时间轴",
+  menuMore: "更多操作",
+  timelineHeadingEdit: "{count} 条事件已归档，可在轴线上继续添加或编辑。",
+  timelineHeadingDisplay: "{count} 条事件正在展示，可点击卡片查看详细档案。"
+};
+
 const demoTimelines = [
   {
     id: crypto.randomUUID(),
-    title: "Fashion History",
+    title: "服饰演变",
     icon: "checkroom",
     createdAt: "2026-07-12T08:00:00.000Z",
     updatedAt: "2026-07-20T08:00:00.000Z"
   },
   {
     id: crypto.randomUUID(),
-    title: "Art Movements",
+    title: "艺术流派",
     icon: "palette",
     createdAt: "2026-07-12T08:20:00.000Z",
     updatedAt: "2026-07-20T08:40:00.000Z"
   },
   {
     id: crypto.randomUUID(),
-    title: "Documents",
+    title: "历史文献",
     icon: "description",
     createdAt: "2026-07-12T09:00:00.000Z",
     updatedAt: "2026-07-19T17:10:00.000Z"
@@ -39,13 +91,13 @@ const demoEvents = [
     id: crypto.randomUUID(),
     timelineId: demoTimelines[1].id,
     x: 820,
-    time: "14th Century",
-    name: "The Renaissance Begins",
-    dynasty: "Renaissance",
+    time: "14世纪",
+    name: "文艺复兴开端",
+    dynasty: "文艺复兴",
     imageId: demoImageIds.renaissance,
-    artifactName: "Workshop Studies and Patronage",
+    artifactName: "工作坊与赞助体系",
     description:
-      "A fervent period of European cultural, artistic, political and economic rebirth. Humanist inquiry, new workshop systems and court patronage reshaped painting, sculpture and scholarship.",
+      "欧洲文化、艺术、政治与经济重新焕发活力的重要阶段。人文主义思潮、工作坊制度与宫廷赞助共同塑造了新的绘画、雕塑与学术结构。",
     createdAt: "2026-07-18T07:00:00.000Z",
     updatedAt: "2026-07-20T08:20:00.000Z"
   },
@@ -54,12 +106,12 @@ const demoEvents = [
     timelineId: demoTimelines[1].id,
     x: 1500,
     time: "1504",
-    name: "Mannerism Emerges",
-    dynasty: "Late Renaissance",
+    name: "矫饰主义兴起",
+    dynasty: "晚期文艺复兴",
     imageId: demoImageIds.mannerism,
-    artifactName: "Stylized Compositions",
+    artifactName: "程式化构图",
     description:
-      "Artists began pushing beyond classical balance into heightened poses, elongated bodies and charged spiritual tension. The shift marks a change in taste rather than a new chronological band.",
+      "艺术家开始突破古典均衡，转向更夸张的姿态、比例和精神张力。这种变化更像审美转向，而非传统年代刻度上的区段划分。",
     createdAt: "2026-07-18T10:10:00.000Z",
     updatedAt: "2026-07-19T15:00:00.000Z"
   },
@@ -67,13 +119,13 @@ const demoEvents = [
     id: crypto.randomUUID(),
     timelineId: demoTimelines[0].id,
     x: 900,
-    time: "Han Dynasty",
-    name: "Deep Sleeves and Layered Robes",
-    dynasty: "Han",
+    time: "汉代",
+    name: "深衣与宽袖体系",
+    dynasty: "汉",
     imageId: demoImageIds.silhouette,
-    artifactName: "Shenyi",
+    artifactName: "深衣",
     description:
-      "The robe silhouette favored generous sleeves and wrapped construction, leaving a strong visual vocabulary for later ceremonial dress and theatrical revival.",
+      "以宽袖、交领和层叠结构为代表的服饰轮廓，为后世礼制服装与戏曲再现提供了强烈的视觉母题。",
     createdAt: "2026-07-15T09:00:00.000Z",
     updatedAt: "2026-07-20T07:50:00.000Z"
   },
@@ -81,13 +133,13 @@ const demoEvents = [
     id: crypto.randomUUID(),
     timelineId: demoTimelines[2].id,
     x: 1160,
-    time: "c. 868",
-    name: "Diamond Sutra Printing",
-    dynasty: "Tang",
+    time: "约 868 年",
+    name: "《金刚经》雕版印刷",
+    dynasty: "唐",
     imageId: demoImageIds.manuscript,
-    artifactName: "Woodblock Print Scroll",
+    artifactName: "雕版印刷卷轴",
     description:
-      "One of the earliest complete, dated printed books. Its survival offers a precise archival anchor for the history of textual reproduction and circulation.",
+      "已知最早的完整有纪年印刷品之一。它为文本复制、佛经传播与印刷技术史提供了极为清晰的档案锚点。",
     createdAt: "2026-07-17T13:20:00.000Z",
     updatedAt: "2026-07-19T13:20:00.000Z"
   }
@@ -100,8 +152,8 @@ const demoImages = [
     width: 1400,
     height: 900,
     data: createPlaceholderImage({
-      title: "Renaissance",
-      subtitle: "Workshop & Humanism",
+      title: "文艺复兴",
+      subtitle: "工作坊与人文主义",
       top: "#5c2d23",
       bottom: "#cab28d"
     })
@@ -112,8 +164,8 @@ const demoImages = [
     width: 1400,
     height: 900,
     data: createPlaceholderImage({
-      title: "Mannerism",
-      subtitle: "Stylized Tension",
+      title: "矫饰主义",
+      subtitle: "姿态与张力",
       top: "#73393a",
       bottom: "#d4bf9f"
     })
@@ -124,8 +176,8 @@ const demoImages = [
     width: 1400,
     height: 900,
     data: createPlaceholderImage({
-      title: "Han Robes",
-      subtitle: "Layered Sleeves",
+      title: "汉代服饰",
+      subtitle: "层叠与宽袖",
       top: "#6c4651",
       bottom: "#d9ccb8"
     })
@@ -136,8 +188,8 @@ const demoImages = [
     width: 1400,
     height: 900,
     data: createPlaceholderImage({
-      title: "Printed Scroll",
-      subtitle: "Archival Witness",
+      title: "雕版印刷",
+      subtitle: "文献与传播",
       top: "#8a5c38",
       bottom: "#ead8b7"
     })
@@ -164,7 +216,8 @@ const state = {
   confirmAction: null,
   dragging: false,
   dragStartX: 0,
-  dragStartScrollLeft: 0
+  dragStartScrollLeft: 0,
+  openTimelineMenuId: ""
 };
 
 const dom = {
@@ -242,19 +295,15 @@ function bindEvents() {
       persistUiState();
       renderMode();
       renderTimeline();
-      showToast(state.ui.mode === "edit" ? "切换到编辑模式" : "切换到展示模式");
+      showToast(state.ui.mode === "edit" ? TEXT.toastSwitchEdit : TEXT.toastSwitchDisplay);
     });
   });
 
   dom.newTimeline.addEventListener("click", createTimeline);
   dom.renameTimeline.addEventListener("click", openRenameModal);
   dom.mobileSidebarToggle.addEventListener("click", () => dom.sidebar.classList.toggle("is-open"));
-  dom.showHelp.addEventListener("click", () => {
-    showToast("拖拽时间轴可扩展浏览范围；编辑模式下点击轴线可新增事件。");
-  });
-  dom.settingsButton.addEventListener("click", () => {
-    showToast("时间轴不设置年代刻度，事件位置由你的点击坐标直接决定。");
-  });
+  dom.showHelp.addEventListener("click", () => showToast(TEXT.toastHelp));
+  dom.settingsButton.addEventListener("click", () => showToast(TEXT.toastSettings));
 
   [dom.returnEntryDesktop, dom.returnEntryMobile].forEach((button) => {
     button.addEventListener("click", () => {
@@ -270,6 +319,7 @@ function bindEvents() {
     persistUiState();
   });
 
+  document.addEventListener("click", handleDocumentClick);
   dom.timelineEvents.addEventListener("click", handleTimelineClick);
 
   dom.eventImage.addEventListener("change", handleImageSelection);
@@ -293,6 +343,15 @@ function bindEvents() {
   });
 }
 
+function handleDocumentClick(event) {
+  if (!event.target.closest(".timeline-menu-button, .timeline-menu")) {
+    if (state.openTimelineMenuId) {
+      state.openTimelineMenuId = "";
+      renderTimelineList();
+    }
+  }
+}
+
 function render() {
   dom.searchInput.value = state.ui.search;
   renderMode();
@@ -305,51 +364,86 @@ function render() {
 function renderMode() {
   dom.modeEdit.classList.toggle("is-active", state.ui.mode === "edit");
   dom.modeDisplay.classList.toggle("is-active", state.ui.mode === "display");
-  dom.legendCopy.textContent =
-    state.ui.mode === "edit"
-      ? "Drag horizontally to navigate. Click the gold axis to create an event."
-      : "Drag horizontally to navigate the timeline archive.";
+  dom.legendCopy.textContent = state.ui.mode === "edit" ? TEXT.timelineListHint : TEXT.timelineDisplayHint;
 }
 
 function renderTimelineList() {
   dom.timelineList.innerHTML = "";
   state.timelines.forEach((timeline) => {
     const eventsCount = state.events.filter((event) => event.timelineId === timeline.id).length;
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = `timeline-item${timeline.id === state.ui.selectedTimelineId ? " is-active" : ""}`;
-    button.innerHTML = `
+    const item = document.createElement("article");
+    item.className = `timeline-item-shell${timeline.id === state.ui.selectedTimelineId ? " is-active" : ""}`;
+
+    const mainButton = document.createElement("button");
+    mainButton.type = "button";
+    mainButton.className = `timeline-item${timeline.id === state.ui.selectedTimelineId ? " is-active" : ""}`;
+    mainButton.innerHTML = `
       <div class="timeline-item-head">
         <span class="material-symbols-outlined" aria-hidden="true">${escapeHtml(timeline.icon || "history_edu")}</span>
-        <span>${escapeHtml(timeline.title)}</span>
+        <span>${escapeHtml(timeline.title || TEXT.unnamedTimeline)}</span>
       </div>
-      <p class="timeline-item-note">${eventsCount} records</p>
+      <p class="timeline-item-note">${eventsCount} ${TEXT.recordCount}</p>
     `;
-    button.addEventListener("click", () => {
+    mainButton.addEventListener("click", () => {
       state.ui.selectedTimelineId = timeline.id;
+      state.openTimelineMenuId = "";
       persistUiState();
       dom.sidebar.classList.remove("is-open");
       render();
     });
-    dom.timelineList.append(button);
+
+    const menuButton = document.createElement("button");
+    menuButton.type = "button";
+    menuButton.className = "timeline-menu-button";
+    menuButton.title = TEXT.menuMore;
+    menuButton.innerHTML = '<span class="material-symbols-outlined" aria-hidden="true">more_horiz</span>';
+    menuButton.addEventListener("click", (event) => {
+      event.stopPropagation();
+      state.openTimelineMenuId = state.openTimelineMenuId === timeline.id ? "" : timeline.id;
+      renderTimelineList();
+    });
+
+    item.append(mainButton, menuButton);
+
+    if (state.openTimelineMenuId === timeline.id) {
+      const menu = document.createElement("div");
+      menu.className = "timeline-menu";
+      const deleteButton = document.createElement("button");
+      deleteButton.type = "button";
+      deleteButton.className = "timeline-menu-item timeline-menu-item-danger";
+      deleteButton.textContent = TEXT.menuDelete;
+      deleteButton.disabled = state.timelines.length <= 1;
+      deleteButton.addEventListener("click", (event) => {
+        event.stopPropagation();
+        if (state.timelines.length <= 1) {
+          showToast(TEXT.toastLastTimeline, "warning");
+          return;
+        }
+        requestDeleteTimeline(timeline.id);
+      });
+      menu.append(deleteButton);
+      item.append(menu);
+    }
+
+    dom.timelineList.append(item);
   });
 }
 
 function renderTimelineHeading() {
   const timeline = getSelectedTimeline();
   const count = getFilteredEvents().length;
-  dom.timelineTitle.textContent = timeline?.title || "Chronicles";
-  dom.timelineSubtitle.textContent =
-    state.ui.mode === "edit"
-      ? `${count} 条事件已归档，可在轴线上继续添加或编辑。`
-      : `${count} 条事件正在展示，可点击卡片查看详细档案。`;
+  dom.timelineTitle.textContent = (timeline && timeline.title) || TEXT.toolTitle;
+  dom.timelineSubtitle.textContent = fillTemplate(
+    state.ui.mode === "edit" ? TEXT.timelineHeadingEdit : TEXT.timelineHeadingDisplay,
+    { count }
+  );
 }
 
 function renderTimeline() {
   dom.timelineEvents.innerHTML = "";
   const timeline = getSelectedTimeline();
   if (!timeline) {
-    dom.timelineEvents.append(createEmptyState("尚无时间轴", "请先创建第一条历史时间轴。"));
+    dom.timelineEvents.append(createEmptyState(TEXT.emptyTimelineTitle, TEXT.emptyTimelineCopy));
     return;
   }
 
@@ -357,10 +451,8 @@ function renderTimeline() {
   if (!events.length) {
     dom.timelineEvents.append(
       createEmptyState(
-        state.ui.mode === "edit" ? "点击时间轴创建第一条事件" : "当前筛选下没有可展示的事件",
-        state.ui.mode === "edit"
-          ? "时间轴本身没有刻度区间，事件位置由你点击的轴线上坐标决定。"
-          : "尝试清空搜索词，或切换到另一条时间轴。"
+        state.ui.mode === "edit" ? TEXT.emptyEventTitleEdit : TEXT.emptyEventTitleDisplay,
+        state.ui.mode === "edit" ? TEXT.emptyEventCopyEdit : TEXT.emptyEventCopyDisplay
       )
     );
     return;
@@ -406,7 +498,7 @@ function renderTimeline() {
         </div>
         <span class="event-card-era">${escapeHtml(record.time)}</span>
         <h3>${escapeHtml(record.name)}</h3>
-        <p>${escapeHtml(truncate(record.description || record.artifactName || "暂无补充说明。", 112))}</p>
+        <p>${escapeHtml(truncate(record.description || record.artifactName || TEXT.defaultDescription, 112))}</p>
       `;
       shell.append(cardButton);
     } else {
@@ -451,19 +543,19 @@ function openEventSheet(eventId = null) {
   state.pendingImage = null;
   dom.eventImage.value = "";
   const record = state.events.find((item) => item.id === eventId);
-  dom.eventSheetTitle.textContent = record ? "Edit Event" : "New Event";
-  dom.eventName.value = record?.name || "";
-  dom.eventTime.value = record?.time || "";
-  dom.eventDynasty.value = record?.dynasty || "";
-  dom.eventArtifact.value = record?.artifactName || "";
-  dom.eventDescription.value = record?.description || "";
+  dom.eventSheetTitle.textContent = record ? TEXT.eventSheetEdit : TEXT.eventSheetNew;
+  dom.eventName.value = (record && record.name) || "";
+  dom.eventTime.value = (record && record.time) || "";
+  dom.eventDynasty.value = (record && record.dynasty) || "";
+  dom.eventArtifact.value = (record && record.artifactName) || "";
+  dom.eventDescription.value = (record && record.description) || "";
   dom.deleteEvent.hidden = !record;
-  renderUploadPreview(record?.imageId || "");
+  renderUploadPreview((record && record.imageId) || "");
   dom.eventSheet.showModal();
 }
 
 function renderUploadPreview(imageId) {
-  const src = state.pendingImage?.dataUrl || (imageId ? getImageSrc(imageId) : "");
+  const src = (state.pendingImage && state.pendingImage.dataUrl) || (imageId ? getImageSrc(imageId) : "");
   if (!src) {
     dom.uploadImage.hidden = true;
     dom.uploadPlaceholder.hidden = false;
@@ -476,7 +568,7 @@ function renderUploadPreview(imageId) {
 }
 
 async function handleImageSelection() {
-  const file = dom.eventImage.files?.[0];
+  const file = dom.eventImage.files && dom.eventImage.files[0];
   if (!file) {
     return;
   }
@@ -492,7 +584,7 @@ async function handleImageSelection() {
 }
 
 async function handleEventSubmit(event) {
-  if (event.submitter?.value === "cancel") {
+  if (event.submitter && event.submitter.value === "cancel") {
     dom.eventSheet.close();
     return;
   }
@@ -507,7 +599,7 @@ async function handleEventSubmit(event) {
   };
 
   if (!payload.time || !payload.name) {
-    showToast("保存前请填写时间与事件名。", "warning");
+    showToast(TEXT.toastNeedFields, "warning");
     (!payload.name ? dom.eventName : dom.eventTime).focus();
     return;
   }
@@ -517,7 +609,7 @@ async function handleEventSubmit(event) {
     return;
   }
 
-  let imageId = state.events.find((item) => item.id === state.sheetOpenForEventId)?.imageId || "";
+  let imageId = ((state.events.find((item) => item.id === state.sheetOpenForEventId)) || {}).imageId || "";
   if (state.pendingImage) {
     imageId = state.pendingImage.id;
     await putRecord("images", {
@@ -538,18 +630,18 @@ async function handleEventSubmit(event) {
       imageId,
       updatedAt: now
     });
-    showToast(`已更新事件《${payload.name}》。`);
+    showToast(fillTemplate(TEXT.toastUpdatedEvent, { title: payload.name }));
   } else {
     await putRecord("events", {
       id: crypto.randomUUID(),
       timelineId: timeline.id,
-      x: state.pendingX ?? state.ui.scrollLeft + 680,
+      x: state.pendingX != null ? state.pendingX : state.ui.scrollLeft + 680,
       imageId,
       createdAt: now,
       updatedAt: now,
       ...payload
     });
-    showToast(`已新增事件《${payload.name}》。`);
+    showToast(fillTemplate(TEXT.toastCreatedEvent, { title: payload.name }));
   }
 
   await touchTimeline(timeline.id);
@@ -564,17 +656,73 @@ function requestDeleteEvent() {
     return;
   }
   openConfirm({
-    title: "Delete Event",
-    message: `确定删除事件“${record.name}”吗？`,
+    title: TEXT.confirmDeleteEventTitle,
+    message: fillTemplate(TEXT.confirmDeleteEventMessage, { title: record.name }),
     action: async () => {
       await deleteRecord("events", record.id);
+      await deleteUnusedImages([record.imageId]);
       await touchTimeline(record.timelineId);
       await loadAllData();
       dom.eventSheet.close();
       render();
-      showToast(`已删除事件《${record.name}》。`);
+      showToast(fillTemplate(TEXT.toastDeletedEvent, { title: record.name }));
     }
   });
+}
+
+function requestDeleteTimeline(timelineId) {
+  const timeline = state.timelines.find((item) => item.id === timelineId);
+  if (!timeline) {
+    return;
+  }
+  openConfirm({
+    title: TEXT.confirmDeleteTimelineTitle,
+    message: fillTemplate(TEXT.confirmDeleteTimelineMessage, { title: timeline.title }),
+    action: async () => {
+      await deleteTimeline(timelineId);
+    }
+  });
+}
+
+async function deleteTimeline(timelineId) {
+  if (state.timelines.length <= 1) {
+    showToast(TEXT.toastLastTimeline, "warning");
+    return;
+  }
+
+  const timeline = state.timelines.find((item) => item.id === timelineId);
+  const relatedEvents = state.events.filter((item) => item.timelineId === timelineId);
+  const imageIds = relatedEvents.map((item) => item.imageId).filter(Boolean);
+
+  await Promise.all([
+    deleteRecord("timelines", timelineId),
+    ...relatedEvents.map((item) => deleteRecord("events", item.id))
+  ]);
+  await deleteUnusedImages(imageIds, timelineId);
+  await loadAllData();
+
+  if (state.ui.selectedTimelineId === timelineId) {
+    const nextTimeline = state.timelines[0] || null;
+    state.ui.selectedTimelineId = (nextTimeline && nextTimeline.id) || "";
+    persistUiState();
+  }
+
+  state.openTimelineMenuId = "";
+  render();
+  showToast(fillTemplate(TEXT.toastDeletedTimeline, { title: (timeline && timeline.title) || TEXT.unnamedTimeline }));
+}
+
+async function deleteUnusedImages(imageIds) {
+  if (!imageIds.length) {
+    return;
+  }
+  const remainingEvents = await getAllRecords("events");
+  const stillUsed = new Set(remainingEvents.map((item) => item.imageId).filter(Boolean));
+  await Promise.all(
+    [...new Set(imageIds)]
+      .filter((imageId) => imageId && !stillUsed.has(imageId))
+      .map((imageId) => deleteRecord("images", imageId))
+  );
 }
 
 function openDetailModal(eventId) {
@@ -584,19 +732,19 @@ function openDetailModal(eventId) {
   }
   state.currentDetailId = eventId;
   dom.detailImage.src = getImageSrc(record.imageId);
-  dom.detailDynastyBadge.textContent = record.dynasty || "Historical Archive";
+  dom.detailDynastyBadge.textContent = record.dynasty || TEXT.archiveFallback;
   dom.detailTimeBadge.textContent = record.time;
   dom.detailTitle.textContent = record.name;
-  dom.detailDescription.textContent = record.description || record.artifactName || "这条记录尚未补充详细说明。";
-  dom.detailQuote.textContent =
-    record.artifactName
-      ? `“${record.artifactName}”可作为理解该事件的核心物证或关联对象。`
-      : "“该事件当前以时间与名称为核心记录，后续可继续补充文献、器物与图像档案。”";
+  dom.detailDescription.textContent = record.description || record.artifactName || TEXT.defaultDescription;
+  dom.detailQuote.textContent = record.artifactName
+    ? fillTemplate(TEXT.detailArtifactQuote, { artifact: record.artifactName })
+    : TEXT.detailQuoteFallback;
   dom.detailMeta.innerHTML = "";
+
   [
-    record.dynasty ? `Dynasty: ${record.dynasty}` : "",
-    record.artifactName ? `Artifact: ${record.artifactName}` : "",
-    `Recorded: ${formatDateTime(record.updatedAt)}`
+    record.dynasty ? `${TEXT.metaDynasty}：${record.dynasty}` : "",
+    record.artifactName ? `${TEXT.metaArtifact}：${record.artifactName}` : "",
+    `${TEXT.metaUpdatedAt}：${formatDateTime(record.updatedAt)}`
   ]
     .filter(Boolean)
     .forEach((text) => {
@@ -605,6 +753,7 @@ function openDetailModal(eventId) {
       chip.textContent = text;
       dom.detailMeta.append(chip);
     });
+
   dom.detailModal.showModal();
 }
 
@@ -618,20 +767,23 @@ function openRenameModal() {
 }
 
 async function handleRenameSubmit(event) {
-  if (event.submitter?.value === "cancel") {
+  if (event.submitter && event.submitter.value === "cancel") {
     dom.renameModal.close();
     return;
   }
   event.preventDefault();
+
   const timeline = getSelectedTimeline();
   if (!timeline) {
     return;
   }
+
   const title = dom.renameInput.value.trim();
   if (!title) {
     dom.renameInput.focus();
     return;
   }
+
   await putRecord("timelines", {
     ...timeline,
     title,
@@ -640,7 +792,7 @@ async function handleRenameSubmit(event) {
   await loadAllData();
   dom.renameModal.close();
   render();
-  showToast(`时间轴已重命名为《${title}》。`);
+  showToast(fillTemplate(TEXT.toastRenamedTimeline, { title }));
 }
 
 function openConfirm({ title, message, action }) {
@@ -651,7 +803,7 @@ function openConfirm({ title, message, action }) {
 }
 
 async function handleConfirmSubmit(event) {
-  if (event.submitter?.value === "cancel") {
+  if (event.submitter && event.submitter.value === "cancel") {
     state.confirmAction = null;
     dom.confirmModal.close();
     return;
@@ -666,7 +818,7 @@ async function handleConfirmSubmit(event) {
 }
 
 async function createTimeline() {
-  const title = `New Timeline ${state.timelines.length + 1}`;
+  const title = `${TEXT.newTimelineBase} ${state.timelines.length + 1}`;
   const record = {
     id: crypto.randomUUID(),
     title,
@@ -677,9 +829,10 @@ async function createTimeline() {
   await putRecord("timelines", record);
   await loadAllData();
   state.ui.selectedTimelineId = record.id;
+  state.openTimelineMenuId = "";
   persistUiState();
   render();
-  showToast(`已创建时间轴《${title}》。`);
+  showToast(fillTemplate(TEXT.toastCreatedTimeline, { title }));
 }
 
 function startDragScroll(event) {
@@ -738,7 +891,7 @@ async function loadAllData() {
 
 function bootstrapSelections() {
   if (!state.ui.selectedTimelineId || !state.timelines.some((item) => item.id === state.ui.selectedTimelineId)) {
-    state.ui.selectedTimelineId = state.timelines[0]?.id || "";
+    state.ui.selectedTimelineId = (state.timelines[0] && state.timelines[0].id) || "";
   }
   if (!["edit", "display"].includes(state.ui.mode)) {
     state.ui.mode = "display";
@@ -748,9 +901,9 @@ function bootstrapSelections() {
 function loadUiState() {
   try {
     const raw = localStorage.getItem(UI_KEY);
-    return raw ? { ...defaultUiState, ...JSON.parse(raw) } : structuredClone(defaultUiState);
+    return raw ? { ...defaultUiState, ...JSON.parse(raw) } : JSON.parse(JSON.stringify(defaultUiState));
   } catch {
-    return structuredClone(defaultUiState);
+    return JSON.parse(JSON.stringify(defaultUiState));
   }
 }
 
@@ -764,7 +917,7 @@ function showToast(message, tone = "info") {
   toast.innerHTML = `
     <span class="material-symbols-outlined toast-icon" aria-hidden="true">${tone === "warning" ? "warning" : "check_circle"}</span>
     <div>
-      <p class="toast-title">${tone === "warning" ? "提示" : "已完成"}</p>
+      <p class="toast-title">${tone === "warning" ? TEXT.toastWarning : TEXT.toastDone}</p>
       <p class="toast-message">${escapeHtml(message)}</p>
     </div>
   `;
@@ -788,9 +941,9 @@ async function touchTimeline(timelineId) {
 }
 
 function getImageSrc(imageId) {
-  return state.images.get(imageId)?.data || createPlaceholderImage({
-    title: "Chronicles",
-    subtitle: "Visual Archive",
+  return ((state.images.get(imageId) || {}).data) || createPlaceholderImage({
+    title: TEXT.placeholderTitle,
+    subtitle: TEXT.placeholderSubtitle,
     top: "#7d5b45",
     bottom: "#d8c7a8"
   });
@@ -829,6 +982,12 @@ function formatDateTime(value) {
     dateStyle: "medium",
     timeStyle: "short"
   }).format(new Date(value));
+}
+
+function fillTemplate(template, values) {
+  return Object.entries(values).reduce((result, [key, value]) => {
+    return result.split(`{${key}}`).join(String(value));
+  }, template);
 }
 
 function escapeHtml(value) {
