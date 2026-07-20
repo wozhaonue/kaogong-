@@ -1,5 +1,13 @@
 const tools = [
   {
+    title: "日月食与三球运动",
+    description: "三维展示太阳、地球、月球的公转关系，并可切换正常运行、日食、月食与血月演示场景。",
+    tag: "天文 / 可视化",
+    href: "./tools/eclipse-orbits/index.html",
+    status: "已上线",
+    chips: ["Three.js", "轨道演示", "日食月食"]
+  },
+  {
     title: "政策法典库",
     description: "Scholar's Nook 风格的法律法典与时政积累工作台，支持法典条目管理、双视图检索与 Markdown 文稿编辑。",
     tag: "法治 / 时政",
