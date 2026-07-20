@@ -4,6 +4,15 @@ const STORAGE_KEYS = {
   ui: "policy-codex-ui-v1"
 };
 
+const MOTION_MS = {
+  articleSwitchOut: 170,
+  articleSwitchIn: 220,
+  articleRemove: 220,
+  codexPanel: 240,
+  modal: 220,
+  toast: 220
+};
+
 const ARTICLE_CATEGORIES = ["重大会议", "讲话"];
 
 const demoArticles = [
@@ -123,7 +132,9 @@ const dom = {
   resetDemo: document.getElementById("reset-demo"),
   tabs: [...document.querySelectorAll("[data-tab-target]")],
   modules: [...document.querySelectorAll("[data-module]")],
+  moduleCodex: document.querySelector('[data-module="codex"]'),
   articleList: document.getElementById("article-list"),
+  folioSheet: document.querySelector(".folio-sheet"),
   articleQuery: document.getElementById("article-query"),
   articleTitle: document.getElementById("article-title"),
   articleCategory: document.getElementById("article-category"),
@@ -175,6 +186,7 @@ const dom = {
   confirmModalMessage: document.getElementById("confirm-modal-message"),
   confirmSubmit: document.getElementById("confirm-submit"),
   toastStack: document.getElementById("toast-stack"),
+  dialogs: [...document.querySelectorAll(".modal-shell")],
   emptyStateTemplate: document.getElementById("empty-state-template")
 };
 
@@ -186,6 +198,16 @@ const modalState = {
   codexEditingId: null,
   entryEditingId: null,
   confirmAction: null
+};
+
+const runtimeState = {
+  articleSwitchTimer: 0,
+  articleEnterTimer: 0,
+  articleRemoveTimer: 0,
+  codexPanelTimer: 0,
+  dialogTimers: new Map(),
+  articleSwitching: false,
+  codexPanelMode: null
 };
 
 bindEvents();
@@ -297,6 +319,13 @@ function bindEvents() {
   dom.entryForm.addEventListener("submit", handleEntryFormSubmit);
   dom.confirmForm.addEventListener("submit", handleConfirmSubmit);
   dom.confirmModal.addEventListener("close", clearConfirmAction);
+
+  dom.dialogs.forEach((dialog) => {
+    dialog.addEventListener("cancel", (event) => {
+      event.preventDefault();
+      closeAnimatedDialog(dialog);
+    });
+  });
 }
 
 function render() {
@@ -309,7 +338,7 @@ function render() {
   });
 
   renderArticleModule();
-  renderCodexModule();
+  renderCodexModule({ immediatePanels: runtimeState.codexPanelMode === null });
 }
 
 function renderArticleModule() {
@@ -330,6 +359,7 @@ function renderArticleList() {
   for (const article of articles) {
     const card = document.createElement("button");
     card.type = "button";
+    card.dataset.articleId = article.id;
     card.className = `sidebar-card${article.id === state.ui.selectedArticleId ? " is-active" : ""}`;
     card.innerHTML = `
       <div class="sidebar-card-head">
@@ -346,11 +376,7 @@ function renderArticleList() {
       </div>
     `;
     card.addEventListener("click", () => {
-      state.ui.selectedArticleId = article.id;
-      draftFlags.articleDirty = false;
-      persistUiState();
-      renderArticleEditor();
-      renderArticleList();
+      animateArticleSwitch(article.id);
     });
     card.querySelector('[data-action="toggle-pin"]').addEventListener("click", (event) => {
       event.stopPropagation();
@@ -404,14 +430,13 @@ function renderArticleEditor() {
   dom.articleSaveState.textContent = draftFlags.articleDirty ? "编辑中" : "已保存";
 }
 
-function renderCodexModule() {
+function renderCodexModule(options = {}) {
   alignCodexSelectionToFilters();
   renderCodexFilters();
   renderCodexGrid();
   renderCodexWorkspace();
   const shouldShowWorkspace = Boolean(getSelectedCodex()) && state.ui.codexOpen;
-  dom.codexDiscovery.hidden = shouldShowWorkspace;
-  dom.codexWorkspace.hidden = !shouldShowWorkspace;
+  syncCodexPanels(shouldShowWorkspace, options.immediatePanels);
 }
 
 function renderCodexFilters() {
@@ -456,7 +481,7 @@ function renderCodexGrid() {
       state.ui.selectedEntryId = codex.entries[0]?.id || "";
       state.ui.codexOpen = true;
       persistUiState();
-      renderCodexModule();
+      renderCodexModule({ immediatePanels: false });
     });
     dom.codexGrid.append(card);
   }
@@ -663,6 +688,33 @@ function createArticle() {
   showToast({ title: "已新建文章", message: "新文章已加入列表，可继续编辑正文。", tone: "success" });
 }
 
+function animateArticleSwitch(nextArticleId) {
+  if (!nextArticleId || nextArticleId === state.ui.selectedArticleId || runtimeState.articleSwitching) {
+    return;
+  }
+
+  runtimeState.articleSwitching = true;
+  window.clearTimeout(runtimeState.articleSwitchTimer);
+  window.clearTimeout(runtimeState.articleEnterTimer);
+  dom.folioSheet.classList.remove("is-editor-entering");
+  dom.folioSheet.classList.add("is-editor-leaving");
+
+  runtimeState.articleSwitchTimer = window.setTimeout(() => {
+    state.ui.selectedArticleId = nextArticleId;
+    draftFlags.articleDirty = false;
+    persistUiState();
+    renderArticleEditor();
+    renderArticleList();
+    dom.folioSheet.classList.remove("is-editor-leaving");
+    dom.folioSheet.classList.add("is-editor-entering");
+
+    runtimeState.articleEnterTimer = window.setTimeout(() => {
+      dom.folioSheet.classList.remove("is-editor-entering");
+      runtimeState.articleSwitching = false;
+    }, MOTION_MS.articleSwitchIn);
+  }, MOTION_MS.articleSwitchOut);
+}
+
 function syncArticleFromForm() {
   const article = getSelectedArticle();
   if (!article) {
@@ -727,12 +779,7 @@ function deleteCurrentArticle() {
     message: `确定删除文章“${article.title}”吗？此操作不可撤销。`,
     confirmLabel: "删除文章",
     onConfirm: () => {
-      state.articles = state.articles.filter((item) => item.id !== article.id);
-      bootstrapSelections();
-      persistArticles();
-      persistUiState();
-      renderArticleModule();
-      showToast({ title: "文章已删除", message: `《${article.title}》已从本地库移除。`, tone: "info" });
+      animateArticleRemoval(article.id, article.title);
     }
   });
 }
@@ -746,11 +793,13 @@ function openCodexModal(codexId = null) {
   dom.codexFormDate.value = codex?.date || "";
   dom.codexFormSource.value = codex?.source || "";
   dom.codexFormTags.value = codex?.tags.join(", ") || "";
-  dom.codexModal.showModal();
+  openAnimatedDialog(dom.codexModal);
 }
 
 function handleCodexFormSubmit(event) {
   if (event.submitter?.value === "cancel") {
+    event.preventDefault();
+    closeAnimatedDialog(dom.codexModal);
     return;
   }
   event.preventDefault();
@@ -786,8 +835,8 @@ function handleCodexFormSubmit(event) {
 
   persistCodices();
   persistUiState();
-  dom.codexModal.close();
-  renderCodexModule();
+  closeAnimatedDialog(dom.codexModal);
+  renderCodexModule({ immediatePanels: true });
   showToast({
     title: isEditing ? "法典已更新" : "法典已创建",
     message: `《${payload.title}》已保存到本地法典库。`,
@@ -808,11 +857,13 @@ function openEntryModal(entryId = null) {
   dom.entryFormTitle.value = entry?.title || "";
   dom.entryFormBody.value = entry?.body || "";
   dom.entryFormNotes.value = entry?.notes || "";
-  dom.entryModal.showModal();
+  openAnimatedDialog(dom.entryModal);
 }
 
 function handleEntryFormSubmit(event) {
   if (event.submitter?.value === "cancel") {
+    event.preventDefault();
+    closeAnimatedDialog(dom.entryModal);
     return;
   }
   event.preventDefault();
@@ -849,7 +900,7 @@ function handleEntryFormSubmit(event) {
   codex.updatedAt = new Date().toISOString();
   persistCodices();
   persistUiState();
-  dom.entryModal.close();
+  closeAnimatedDialog(dom.entryModal);
   renderCodexWorkspace();
   renderCodexGrid();
   showToast({
@@ -972,7 +1023,7 @@ function openConfirmModal({ title, message, confirmLabel = "确认", onConfirm }
   dom.confirmModalTitle.textContent = title || "确认操作";
   dom.confirmModalMessage.textContent = message || "";
   dom.confirmSubmit.textContent = confirmLabel;
-  dom.confirmModal.showModal();
+  openAnimatedDialog(dom.confirmModal);
 }
 
 function handleConfirmSubmit(event) {
@@ -989,9 +1040,7 @@ function handleConfirmSubmit(event) {
 }
 
 function closeConfirmModal() {
-  if (dom.confirmModal.open) {
-    dom.confirmModal.close();
-  }
+  closeAnimatedDialog(dom.confirmModal);
 }
 
 function clearConfirmAction() {
@@ -1016,11 +1065,19 @@ function showToast({ title, message, tone = "success", duration = 2600 }) {
   `;
   const removeToast = () => {
     if (toast.isConnected) {
-      toast.remove();
+      toast.classList.add("is-leaving");
+      window.setTimeout(() => {
+        if (toast.isConnected) {
+          toast.remove();
+        }
+      }, MOTION_MS.toast);
     }
   };
   toast.querySelector(".toast-close").addEventListener("click", removeToast);
   dom.toastStack.append(toast);
+  window.requestAnimationFrame(() => {
+    toast.classList.add("is-visible");
+  });
   window.setTimeout(removeToast, duration);
 }
 
@@ -1032,6 +1089,93 @@ function getToastIcon(tone) {
     return "info";
   }
   return "check_circle";
+}
+
+function animateArticleRemoval(articleId, articleTitle) {
+  const card = dom.articleList.querySelector(`[data-article-id="${articleId}"]`);
+  if (!card) {
+    state.articles = state.articles.filter((item) => item.id !== articleId);
+    bootstrapSelections();
+    persistArticles();
+    persistUiState();
+    renderArticleModule();
+    showToast({ title: "文章已删除", message: `《${articleTitle}》已从本地库移除。`, tone: "info" });
+    return;
+  }
+
+  window.clearTimeout(runtimeState.articleRemoveTimer);
+  card.classList.add("is-removing");
+  runtimeState.articleRemoveTimer = window.setTimeout(() => {
+    state.articles = state.articles.filter((item) => item.id !== articleId);
+    bootstrapSelections();
+    persistArticles();
+    persistUiState();
+    renderArticleModule();
+    showToast({ title: "文章已删除", message: `《${articleTitle}》已从本地库移除。`, tone: "info" });
+  }, MOTION_MS.articleRemove);
+}
+
+function syncCodexPanels(shouldShowWorkspace, immediate = false) {
+  const nextMode = shouldShowWorkspace ? "workspace" : "discovery";
+  if (runtimeState.codexPanelMode === nextMode && !immediate) {
+    return;
+  }
+
+  const workspace = dom.codexWorkspace;
+  const discovery = dom.codexDiscovery;
+
+  if (immediate || runtimeState.codexPanelMode === null) {
+    discovery.hidden = shouldShowWorkspace;
+    workspace.hidden = !shouldShowWorkspace;
+    discovery.classList.remove("is-panel-entering", "is-panel-leaving");
+    workspace.classList.remove("is-panel-entering", "is-panel-leaving");
+    runtimeState.codexPanelMode = nextMode;
+    return;
+  }
+
+  const outgoing = shouldShowWorkspace ? discovery : workspace;
+  const incoming = shouldShowWorkspace ? workspace : discovery;
+  window.clearTimeout(runtimeState.codexPanelTimer);
+
+  outgoing.classList.remove("is-panel-entering");
+  incoming.classList.remove("is-panel-leaving");
+  outgoing.classList.add("is-panel-leaving");
+
+  runtimeState.codexPanelTimer = window.setTimeout(() => {
+    outgoing.hidden = true;
+    outgoing.classList.remove("is-panel-leaving");
+    incoming.hidden = false;
+    incoming.classList.add("is-panel-entering");
+
+    runtimeState.codexPanelTimer = window.setTimeout(() => {
+      incoming.classList.remove("is-panel-entering");
+    }, MOTION_MS.codexPanel);
+  }, MOTION_MS.codexPanel / 2);
+
+  runtimeState.codexPanelMode = nextMode;
+}
+
+function openAnimatedDialog(dialog) {
+  window.clearTimeout(runtimeState.dialogTimers.get(dialog));
+  dialog.classList.remove("is-closing");
+  if (!dialog.open) {
+    dialog.showModal();
+  }
+}
+
+function closeAnimatedDialog(dialog) {
+  if (!dialog?.open || dialog.classList.contains("is-closing")) {
+    return;
+  }
+
+  dialog.classList.add("is-closing");
+  const timer = window.setTimeout(() => {
+    dialog.classList.remove("is-closing");
+    if (dialog.open) {
+      dialog.close();
+    }
+  }, MOTION_MS.modal);
+  runtimeState.dialogTimers.set(dialog, timer);
 }
 
 function alignCodexSelectionToFilters() {

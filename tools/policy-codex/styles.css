@@ -326,6 +326,7 @@ a {
   background: transparent;
   text-align: left;
   transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+  transform-origin: left center;
 }
 
 .sidebar-card:hover {
@@ -441,6 +442,14 @@ a {
     var(--paper-noise),
     linear-gradient(180deg, rgba(247, 245, 240, 0.84), rgba(245, 242, 236, 0.96));
   background-size: 320px 320px, 100% 100%;
+}
+
+.folio-sheet.is-editor-leaving {
+  animation: folio-fade-out 170ms ease forwards;
+}
+
+.folio-sheet.is-editor-entering {
+  animation: folio-fade-in 220ms ease;
 }
 
 .title-input {
@@ -633,6 +642,16 @@ a {
 .codex-discovery {
   position: relative;
   padding-bottom: 76px;
+}
+
+.codex-discovery.is-panel-leaving,
+.codex-workspace.is-panel-leaving {
+  animation: codex-panel-out 120ms ease forwards;
+}
+
+.codex-discovery.is-panel-entering,
+.codex-workspace.is-panel-entering {
+  animation: codex-panel-in 240ms ease;
 }
 
 .codex-header {
@@ -887,13 +906,21 @@ a {
 }
 
 .accordion-body {
-  display: none;
+  display: grid;
   gap: 16px;
-  padding: 0 30px 24px 98px;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  padding: 0 30px 0 98px;
+  pointer-events: none;
+  transition: max-height 240ms ease, opacity 180ms ease, padding-bottom 240ms ease;
 }
 
 .accordion-item:hover .accordion-body {
-  display: grid;
+  max-height: 240px;
+  opacity: 1;
+  padding-bottom: 24px;
+  pointer-events: auto;
 }
 
 .accordion-item:hover .accordion-toggle .material-symbols-outlined {
@@ -902,6 +929,17 @@ a {
 
 .accordion-toggle .material-symbols-outlined {
   transition: transform 180ms ease;
+}
+
+.compact-note,
+.codex-entry-actions {
+  transform: translateY(8px);
+  transition: transform 220ms ease, opacity 180ms ease;
+}
+
+.accordion-item:hover .compact-note,
+.accordion-item:hover .codex-entry-actions {
+  transform: translateY(0);
 }
 
 .compact-note {
@@ -1042,11 +1080,23 @@ a {
   border: 0;
   padding: 0;
   background: transparent;
+  opacity: 0;
+  transition: opacity 220ms ease;
+}
+
+.modal-shell[open] {
+  opacity: 1;
 }
 
 .modal-shell::backdrop {
   background: rgba(18, 24, 19, 0.42);
   backdrop-filter: blur(6px);
+  opacity: 0;
+  transition: opacity 220ms ease, backdrop-filter 220ms ease;
+}
+
+.modal-shell[open]::backdrop {
+  opacity: 1;
 }
 
 .modal-card {
@@ -1059,6 +1109,9 @@ a {
     linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(243, 238, 230, 0.94));
   background-size: 320px 320px, 100% 100%;
   box-shadow: var(--shadow-3);
+  opacity: 0;
+  transform: translateY(18px) scale(0.97);
+  transition: transform 220ms ease, opacity 220ms ease;
 }
 
 .modal-card-wide {
@@ -1067,6 +1120,25 @@ a {
 
 .modal-card-confirm {
   width: min(560px, calc(100vw - 24px));
+}
+
+.modal-shell[open] .modal-card {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.modal-shell.is-closing {
+  opacity: 0;
+}
+
+.modal-shell.is-closing::backdrop {
+  opacity: 0;
+  backdrop-filter: blur(0);
+}
+
+.modal-shell.is-closing .modal-card {
+  opacity: 0;
+  transform: translateY(12px) scale(0.985);
 }
 
 .modal-head,
@@ -1151,6 +1223,19 @@ a {
   box-shadow: var(--shadow-3);
   color: var(--forest-strong);
   pointer-events: auto;
+  opacity: 0;
+  transform: translateY(14px) scale(0.97);
+  transition: transform 220ms ease, opacity 220ms ease;
+}
+
+.toast.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.toast.is-leaving {
+  opacity: 0;
+  transform: translateY(10px) scale(0.98);
 }
 
 .toast[data-tone="success"] .toast-icon {
@@ -1196,6 +1281,79 @@ a {
 .toast-close {
   width: 32px;
   height: 32px;
+}
+
+.sidebar-card.is-removing {
+  animation: sidebar-card-remove 220ms ease forwards;
+  overflow: hidden;
+}
+
+@keyframes folio-fade-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+@keyframes folio-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes codex-panel-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(12px) scale(0.988);
+  }
+}
+
+@keyframes codex-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.99);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes sidebar-card-remove {
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    max-height: 180px;
+    margin-bottom: 0;
+    padding-top: 14px;
+    padding-bottom: 16px;
+  }
+
+  to {
+    opacity: 0;
+    transform: translateX(-14px) scale(0.97);
+    max-height: 0;
+    margin-bottom: -10px;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
 }
 
 @media (max-width: 1240px) {
