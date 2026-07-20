@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chronicles 历史时间轴</title>
+    <meta
+      name="description"
+      content="Chronicles 历史时间轴工具，用于归档多条时间轴中的历史事件、服饰、文献与视觉资料。"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css?v=2026-07-20-1" />
+  </head>
+  <body>
+    <div class="grain-overlay" aria-hidden="true"></div>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand-cluster">
+          <a class="brand-link" href="../../index.html">Chronicles</a>
+          <button class="return-button return-button-mobile" id="return-entry-mobile" type="button">
+            <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
+            工具入口
+          </button>
+        </div>
+        <div class="toolbar-search">
+          <span class="material-symbols-outlined" aria-hidden="true">search</span>
+          <input id="search-input" type="search" placeholder="Search archive..." autocomplete="off" />
+        </div>
+        <div class="toolbar-actions">
+          <div class="mode-toggle" role="tablist" aria-label="视图模式">
+            <button class="mode-button" id="mode-edit" type="button" data-mode="edit">Edit</button>
+            <button class="mode-button" id="mode-display" type="button" data-mode="display">Display</button>
+          </div>
+          <button class="icon-button" id="rename-timeline" type="button" title="重命名时间轴">
+            <span class="material-symbols-outlined" aria-hidden="true">edit_square</span>
+          </button>
+          <button class="icon-button" id="settings-button" type="button" title="界面说明">
+            <span class="material-symbols-outlined" aria-hidden="true">settings</span>
+          </button>
+          <button class="return-button" id="return-entry-desktop" type="button">
+            <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
+            工具入口
+          </button>
+          <div class="avatar-badge" aria-hidden="true">CH</div>
+        </div>
+      </header>
+
+      <div class="workspace">
+        <aside class="sidebar" id="sidebar">
+          <div class="sidebar-header">
+            <div>
+              <h1>Your Archive</h1>
+              <p>Scholarly Collections</p>
+            </div>
+          </div>
+
+          <button class="primary-button" id="new-timeline" type="button">
+            <span class="material-symbols-outlined" aria-hidden="true">add</span>
+            New Timeline
+          </button>
+
+          <div class="sidebar-list" id="timeline-list" aria-live="polite"></div>
+
+          <div class="sidebar-footer">
+            <button class="footer-link" id="mobile-sidebar-toggle" type="button">
+              <span class="material-symbols-outlined" aria-hidden="true">menu</span>
+              时间轴列表
+            </button>
+            <button class="footer-link" id="show-help" type="button">
+              <span class="material-symbols-outlined" aria-hidden="true">help</span>
+              Help
+            </button>
+          </div>
+        </aside>
+
+        <main class="main-stage">
+          <section class="timeline-stage">
+            <div class="timeline-heading">
+              <div>
+                <h2 id="timeline-title"></h2>
+                <p id="timeline-subtitle"></p>
+              </div>
+            </div>
+
+            <div class="timeline-scroll" id="timeline-scroll">
+              <div class="timeline-canvas" id="timeline-canvas">
+                <div class="timeline-axis" aria-hidden="true"></div>
+                <div class="timeline-events" id="timeline-events"></div>
+              </div>
+            </div>
+
+            <aside class="legend-card">
+              <div class="legend-head">
+                <span class="material-symbols-outlined" aria-hidden="true">info</span>
+                <span>Legend</span>
+              </div>
+              <div class="legend-items">
+                <div class="legend-item">
+                  <span class="legend-dot legend-dot-minor"></span>
+                  <span>Minor Event</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-dot legend-dot-major"></span>
+                  <span>Featured Card</span>
+                </div>
+              </div>
+              <p class="legend-copy" id="legend-copy"></p>
+            </aside>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <dialog class="sheet-backdrop" id="event-sheet">
+      <form class="event-sheet" id="event-form" method="dialog">
+        <div class="sheet-header">
+          <div>
+            <p class="sheet-kicker">Entry Management</p>
+            <h2 id="event-sheet-title">New Event</h2>
+          </div>
+          <button class="icon-button" id="close-event-sheet" type="submit" value="cancel" title="关闭">
+            <span class="material-symbols-outlined" aria-hidden="true">close</span>
+          </button>
+        </div>
+
+        <div class="sheet-body">
+          <label class="field field-large">
+            <span>Event Name</span>
+            <input id="event-name" type="text" />
+          </label>
+
+          <div class="field-grid">
+            <label class="field">
+              <span>Time/Date</span>
+              <input id="event-time" type="text" />
+            </label>
+            <label class="field">
+              <span>Dynasty / Era</span>
+              <input id="event-dynasty" type="text" />
+            </label>
+          </div>
+
+          <label class="field">
+            <span>Associated Artifact / Object</span>
+            <input id="event-artifact" type="text" />
+          </label>
+
+          <label class="field">
+            <span>Detailed Description</span>
+            <textarea id="event-description" rows="6"></textarea>
+          </label>
+
+          <label class="upload-shell" for="event-image">
+            <input id="event-image" type="file" accept="image/*" hidden />
+            <div class="upload-preview" id="upload-preview">
+              <div class="upload-placeholder" id="upload-placeholder">
+                <span class="material-symbols-outlined" aria-hidden="true">add_photo_alternate</span>
+                <strong>Click to append visual record</strong>
+                <span>Stored locally in IndexedDB</span>
+              </div>
+              <img id="upload-image" alt="事件图片预览" hidden />
+            </div>
+          </label>
+        </div>
+
+        <div class="sheet-footer">
+          <button class="ghost-button danger-button" id="delete-event" type="button">Delete</button>
+          <div class="sheet-actions">
+            <button class="ghost-button" type="submit" value="cancel">Cancel</button>
+            <button class="accent-button" id="save-event" type="submit">Save Record</button>
+          </div>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal-backdrop" id="detail-modal">
+      <article class="detail-modal">
+        <div class="detail-toolbar">
+          <button class="icon-button" id="detail-edit" type="button" title="编辑事件">
+            <span class="material-symbols-outlined" aria-hidden="true">edit</span>
+          </button>
+          <button class="icon-button" id="detail-close" type="button" title="关闭详情">
+            <span class="material-symbols-outlined" aria-hidden="true">close</span>
+          </button>
+        </div>
+
+        <div class="detail-hero">
+          <img id="detail-image" alt="事件视觉图像" />
+          <div class="detail-overlay"></div>
+          <div class="detail-badges">
+            <span class="detail-badge" id="detail-dynasty-badge"></span>
+            <span class="detail-badge detail-badge-primary" id="detail-time-badge"></span>
+          </div>
+        </div>
+
+        <div class="detail-body">
+          <div class="detail-intro">
+            <h2 id="detail-title"></h2>
+            <p id="detail-description"></p>
+          </div>
+
+          <blockquote class="detail-quote" id="detail-quote"></blockquote>
+
+          <div class="detail-meta" id="detail-meta"></div>
+        </div>
+      </article>
+    </dialog>
+
+    <dialog class="confirm-backdrop" id="confirm-modal">
+      <form class="confirm-card" id="confirm-form" method="dialog">
+        <div class="confirm-head">
+          <p class="sheet-kicker">Confirm Action</p>
+          <h2 id="confirm-title">确认操作</h2>
+        </div>
+        <p class="confirm-copy" id="confirm-message"></p>
+        <div class="confirm-actions">
+          <button class="ghost-button" type="submit" value="cancel">Cancel</button>
+          <button class="accent-button" id="confirm-submit" type="submit">Confirm</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="confirm-backdrop" id="rename-modal">
+      <form class="confirm-card rename-card" id="rename-form" method="dialog">
+        <div class="confirm-head">
+          <p class="sheet-kicker">Timeline Settings</p>
+          <h2>Rename Timeline</h2>
+        </div>
+        <label class="field">
+          <span>Timeline Title</span>
+          <input id="rename-input" type="text" />
+        </label>
+        <div class="confirm-actions">
+          <button class="ghost-button" type="submit" value="cancel">Cancel</button>
+          <button class="accent-button" type="submit">Save</button>
+        </div>
+      </form>
+    </dialog>
+
+    <div class="toast-stack" id="toast-stack" aria-live="polite" aria-atomic="true"></div>
+
+    <script type="module" src="./app.js?v=2026-07-20-1"></script>
+  </body>
+</html>
