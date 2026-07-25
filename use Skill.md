@@ -28,9 +28,9 @@
 
 | Skill | 主要用途 | 适合在什么情况下使用 | 什么情况下不应该作为第一选择 | 推荐组合方式 | 用户提示词写法建议 | 示例提示词 |
 |---|---|---|---|---|---|---|
-| `repo-tool-page-builder` | 在当前仓库中创建或扩展一个工具页，并接入 landing 首页入口 | 你正在 `tools/` 下创建一个新工具；你需要在 `scripts/landing.js` 中增加首页卡片；你需要一个纯前端、相对路径安全、可用于 GitHub Pages 的工具页 | 页面已经存在，而且这次工作只是一个小样式调整或一个局部 bug 修复；真正的问题是“它还不够像原型”，而不是“它还没有被建出来并接入仓库” | 当用户明确说“必须严格还原”“要一比一”“必须和设计稿一致”时，和 `prototype-fidelity` 组合使用 | 明确告诉 Skill：原型素材在哪里、工具页要放在哪个文件夹、技术栈约束是什么、是否需要接入 landing 页入口 | `Use $repo-tool-page-builder to create a new pure HTML/CSS/JS tool under tools/ from the prototype folder at D:\\File\\example, add a landing card entry, and keep all assets GitHub Pages friendly.` |
-| `repo-tool-polish` | 对一个已经存在的工具页做有针对性的后续修复，并在浏览器里验证结果 | 页面已经存在；需求是修 bug、调样式、修 hover、修弹窗、修禁用态、修滚动表现、修动画、修列表更新、修全屏逻辑，或者做浏览器侧验收 | 你是在从零创建一个新工具页；任务的主体是新增完整页面；用户明确要求的是“整屏高保真复刻原型”，而不是局部修复 | 当局部修复逐渐演变成“整页仍然不像原型”时，与 `prototype-fidelity` 组合使用 | 明确告诉 Skill：受影响的是哪个现有工具目录、具体 bug 或界面问题是什么、哪些浏览器行为必须被验证 | `Use $repo-tool-polish to fix the existing tool at tools/flora-knowledge-atlas so the gallery hint is lighter, the scrollbar is hidden, and the final result is verified in the browser.` |
-| `prototype-fidelity` | 以“原型是唯一视觉参照”为前提，推动一轮高保真复刻修正 | 用户明确说了“要一比一”“要严格还原原型”“现在看起来和原稿不一样”“布局不对”“间距和字体不对”“不要只做成能用，要做得一样” | 任务只是仓库结构接入；任务只是一个很小的功能 bug，且没有更广泛的视觉还原要求；用户只想要一个快速可用的功能修复 | 新页面从原型开始做时，与 `repo-tool-page-builder` 组合；已有页面要朝原型继续逼近时，与 `repo-tool-polish` 组合 | 明确告诉 Skill：原型素材是什么，当前实现是什么，需要拿什么去和原型逐项比对 | `Use $prototype-fidelity to compare tools/policy-codex against the provided prototype HTML and screenshots, identify the highest-signal visual mismatches, and drive a one-to-one fidelity pass.` |
+| `repo-tool-page-builder` | 在当前仓库中创建或扩展一个工具页，并接入 landing 首页入口 | 你正在 `tools/` 下创建一个新工具；你需要在 `scripts/landing.js` 中增加首页卡片；你需要一个纯前端、相对路径安全、可用于 GitHub Pages 的工具页 | 页面已经存在，而且这次工作只是一个小样式调整或一个局部 bug 修复；真正的问题是“它还不够像原型”，而不是“它还没有被建出来并接入仓库” | 当用户明确说“必须严格还原”“要一比一”“必须和设计稿一致”时，和 `prototype-fidelity` 组合使用 | 明确告诉 Skill：原型素材在哪里、工具页要放在哪个文件夹、技术栈约束是什么、是否需要接入 landing 页入口 | `请使用 $repo-tool-page-builder，在 tools/ 下根据 D:\File\example 里的原型素材创建一个新的纯 HTML/CSS/JS 工具页，补充 landing 页卡片入口，并确保所有资源路径都适配 GitHub Pages。` |
+| `repo-tool-polish` | 对一个已经存在的工具页做有针对性的后续修复，并在浏览器里验证结果 | 页面已经存在；需求是修 bug、调样式、修 hover、修弹窗、修禁用态、修滚动表现、修动画、修列表更新、修全屏逻辑，或者做浏览器侧验收 | 你是在从零创建一个新工具页；任务的主体是新增完整页面；用户明确要求的是“整屏高保真复刻原型”，而不是局部修复 | 当局部修复逐渐演变成“整页仍然不像原型”时，与 `prototype-fidelity` 组合使用 | 明确告诉 Skill：受影响的是哪个现有工具目录、具体 bug 或界面问题是什么、哪些浏览器行为必须被验证 | `请使用 $repo-tool-polish，修复 tools/flora-knowledge-atlas 这个现有工具页，让画廊提示更轻、滚动条隐藏，并在浏览器中验证最终效果。` |
+| `prototype-fidelity` | 以“原型是唯一视觉参照”为前提，推动一轮高保真复刻修正 | 用户明确说了“要一比一”“要严格还原原型”“现在看起来和原稿不一样”“布局不对”“间距和字体不对”“不要只做成能用，要做得一样” | 任务只是仓库结构接入；任务只是一个很小的功能 bug，且没有更广泛的视觉还原要求；用户只想要一个快速可用的功能修复 | 新页面从原型开始做时，与 `repo-tool-page-builder` 组合；已有页面要朝原型继续逼近时，与 `repo-tool-polish` 组合 | 明确告诉 Skill：原型素材是什么，当前实现是什么，需要拿什么去和原型逐项比对 | `请使用 $prototype-fidelity，对比 tools/policy-codex 的当前实现与我提供的原型 HTML 和截图，找出最关键的视觉差异，并推动一轮一比一还原修正。` |
 
 ## 边界规则
 
@@ -88,7 +88,7 @@
 推荐提示词：
 
 ```text
-Use $repo-tool-page-builder and $prototype-fidelity to build a new tool under tools/ from the prototype folder at D:\File\example, add the landing-page entry, and keep the final page as close as possible to the provided prototype HTML and screenshots.
+请使用 $repo-tool-page-builder 和 $prototype-fidelity，根据 D:\File\example 中的原型素材在 tools/ 下新建一个工具页，补充 landing 页入口，并尽可能让最终页面与提供的原型 HTML 和截图保持高度一致。
 ```
 
 ### `repo-tool-polish` + `prototype-fidelity`
@@ -107,7 +107,7 @@ Use $repo-tool-page-builder and $prototype-fidelity to build a new tool under to
 推荐提示词：
 
 ```text
-Use $repo-tool-polish and $prototype-fidelity to inspect the existing tool at tools/policy-codex, fix the reported interaction bugs, and then compare it against the supplied prototype HTML and screenshots for a stronger fidelity pass.
+请使用 $repo-tool-polish 和 $prototype-fidelity，检查 tools/policy-codex 这个现有工具页，先修复我提到的交互 bug，再对照我提供的原型 HTML 和截图做更严格的高保真修正。
 ```
 
 ## 提示词编写建议
@@ -117,13 +117,13 @@ Use $repo-tool-polish and $prototype-fidelity to inspect the existing tool at to
 好的写法：
 
 ```text
-Use $repo-tool-polish to update the existing tool at tools/flora-knowledge-atlas ...
+请使用 $repo-tool-polish，继续修改 tools/flora-knowledge-atlas 这个已经存在的工具页……
 ```
 
 不好的写法：
 
 ```text
-Please improve this page ...
+请帮我改一下这个页面……
 ```
 
 原因：第一句话往往就决定了助手应该走“新建流程”“修 bug 流程”还是“高保真比对流程”。
@@ -133,13 +133,13 @@ Please improve this page ...
 好的写法：
 
 ```text
-Use $repo-tool-page-builder to create the tool under tools/chronicles-history-map ...
+请使用 $repo-tool-page-builder，在 tools/chronicles-history-map 下创建这个工具页……
 ```
 
 不好的写法：
 
 ```text
-Please add another tool page ...
+请再加一个工具页……
 ```
 
 原因：明确目录可以减少仓库接入时的歧义。
@@ -149,13 +149,13 @@ Please add another tool page ...
 好的写法：
 
 ```text
-Use $prototype-fidelity ... and treat the provided prototype HTML as the source of truth.
+请使用 $prototype-fidelity，并把我提供的原型 HTML 当作唯一视觉标准。
 ```
 
 不好的写法：
 
 ```text
-Make it prettier.
+帮我把它做得更好看一点。
 ```
 
 原因：“更好看一点”只会触发普通润色；“把原型当成唯一视觉标准”才会触发 fidelity-first 的工作方式。
@@ -165,7 +165,7 @@ Make it prettier.
 好的写法：
 
 ```text
-Use $repo-tool-polish to fix this modal bug and verify the flow in the browser.
+请使用 $repo-tool-polish，修复这个弹窗 bug，并在浏览器里验证完整流程。
 ```
 
 原因：这会推动流程先复现、再修复、再验证，而不是只在代码里猜测问题。
@@ -175,7 +175,7 @@ Use $repo-tool-polish to fix this modal bug and verify the flow in the browser.
 示例：
 
 ```text
-Use $repo-tool-page-builder to create a pure HTML/CSS/JS tool page, keep all assets self-contained under tools/my-tool, and preserve GitHub Pages friendly relative paths.
+请使用 $repo-tool-page-builder，创建一个纯 HTML/CSS/JS 的工具页，所有资源都放在 tools/my-tool 下，并保持 GitHub Pages 友好的相对路径结构。
 ```
 
 ## 推荐提示词模板
@@ -183,31 +183,31 @@ Use $repo-tool-page-builder to create a pure HTML/CSS/JS tool page, keep all ass
 ### 模板 A：新增工具页
 
 ```text
-Use $repo-tool-page-builder to create a new tool under tools/<tool-name>/ from the prototype materials at <path>. Keep the implementation pure HTML/CSS/JS, add the landing-page card entry, and make sure the result is safe for GitHub Pages deployment.
+请使用 $repo-tool-page-builder，根据 <path> 中的原型素材在 tools/<tool-name>/ 下创建一个新的工具页。实现必须保持纯 HTML/CSS/JS，并补充 landing 页卡片入口，同时确保结果适配 GitHub Pages 部署。
 ```
 
 ### 模板 B：修已有页面 bug
 
 ```text
-Use $repo-tool-polish to inspect the existing tool at tools/<tool-name>/, reproduce the reported issue, patch the smallest relevant HTML/CSS/JS surface, and verify the final behavior in the browser.
+请使用 $repo-tool-polish，检查 tools/<tool-name>/ 这个已有工具页，先复现我描述的问题，再用最小范围的 HTML/CSS/JS 修改完成修复，并在浏览器中验证最终行为。
 ```
 
 ### 模板 C：高保真修正现有页面
 
 ```text
-Use $prototype-fidelity to compare the implementation at tools/<tool-name>/ against the provided prototype HTML, screenshots, and design-language notes, then drive a one-to-one fidelity pass that prioritizes the largest layout and visual mismatches first.
+请使用 $prototype-fidelity，对比 tools/<tool-name>/ 的当前实现与我提供的原型 HTML、截图和设计语言说明，并按“优先修正最大布局和视觉差异”的原则推动一轮一比一还原。
 ```
 
 ### 模板 D：新页面 + 严格还原原型
 
 ```text
-Use $repo-tool-page-builder and $prototype-fidelity to build a new tool under tools/<tool-name>/, wire it into the landing page, and treat the supplied prototype as the visual source of truth for a one-to-one restoration pass.
+请使用 $repo-tool-page-builder 和 $prototype-fidelity，在 tools/<tool-name>/ 下创建一个新工具页，接入 landing 首页，并把我提供的原型作为唯一视觉标准，完成一轮高保真还原。
 ```
 
 ### 模板 E：已有页面修 bug + 进一步提升还原度
 
 ```text
-Use $repo-tool-polish and $prototype-fidelity to fix the existing tool at tools/<tool-name>/, verify the reported browser behavior, and then compare the updated result against the prototype for a closer visual match.
+请使用 $repo-tool-polish 和 $prototype-fidelity，先修复 tools/<tool-name>/ 这个已有工具页中的浏览器交互问题，再把修正后的结果与原型对照，继续提升视觉还原度。
 ```
 
 ## 常见误用场景
@@ -218,7 +218,7 @@ Use $repo-tool-polish and $prototype-fidelity to fix the existing tool at tools/
 | 用 `repo-tool-polish` 去从零新建一个完整工具页 | 用 `repo-tool-page-builder` |
 | 页面整体已经和原型差很大，却只用 `repo-tool-polish` 去修局部问题 | 加上 `prototype-fidelity` |
 | 一个纯功能 bug，没有明显视觉还原要求，却直接使用 `prototype-fidelity` | 用 `repo-tool-polish` |
-| 用户真实要求是“严格按原型来”，但提示词只写“帮我美化一下” | 明确写“use `prototype-fidelity` and treat the prototype as the source of truth” |
+| 用户真实要求是“严格按原型来”，但提示词只写“帮我美化一下” | 明确写“请使用 `prototype-fidelity`，并把原型当成唯一视觉标准” |
 
 ## 默认选择规则
 
