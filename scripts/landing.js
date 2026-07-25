@@ -46,6 +46,14 @@ const tools = [
     href: "./tools/insight-board/index.html",
     status: "预留",
     chips: ["工具入口", "卡片跳转", "部署友好"]
+  },
+  {
+    title: "Flora Knowledge Atlas \u82b1\u5349\u79ef\u7d2f",
+    description: "\u82b1\u5349\u6863\u6848\u4e0e\u601d\u7ef4\u5bfc\u56fe\u4e00\u4f53\u7684\u7eaf\u524d\u7aef\u5de5\u5177\uff0c\u652f\u6301\u82b1\u5349\u8bb0\u5f55 CRUD\u3001\u601d\u7ef4\u5bfc\u56fe\u5206\u7c7b\u4e0e\u60ac\u6d6e\u77e5\u8bc6\u5361\u5c55\u793a\u3002",
+    tag: "\u82b1\u5349 / \u77e5\u8bc6\u5f52\u6863",
+    href: "./tools/flora-knowledge-atlas/index.html",
+    status: "\u5df2\u4e0a\u7ebf",
+    chips: ["\u82b1\u5349\u6863\u6848", "\u5bfc\u56fe\u5206\u7c7b", "\u672c\u5730\u6301\u4e45\u5316"]
   }
 ];
 

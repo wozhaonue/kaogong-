@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flora Knowledge Atlas | 花卉积累</title>
+    <meta
+      name="description"
+      content="花卉记录归档、画廊展示与多思维导图分类工具，支持本地创建、编辑、删除、图片存储与全屏展示。"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&family=Material+Symbols+Outlined:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="site-shell">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <div class="brand-lockup">
+            <h1 class="brand-title">Herbarium Archive</h1>
+          </div>
+          <nav class="tab-nav" aria-label="主导航">
+            <button class="tab-button is-active" type="button" data-tab="list">
+              <span class="material-symbols-outlined" aria-hidden="true">format_list_bulleted</span>
+              <span>Flower List</span>
+            </button>
+            <button class="tab-button" type="button" data-tab="map">
+              <span class="material-symbols-outlined" aria-hidden="true">account_tree</span>
+              <span>Mind Map</span>
+            </button>
+          </nav>
+          <div class="topbar-actions">
+            <a class="return-link" href="../../index.html">
+              <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
+              <span>回到工具入口</span>
+            </a>
+          </div>
+        </div>
+      </header>
+
+      <main class="app-shell">
+        <section class="tab-panel is-active" data-panel="list">
+          <section class="hero-block">
+            <div>
+              <h2 class="hero-title">Knowledge Collection</h2>
+              <p class="hero-copy">
+                以植物档案馆的方式整理花卉样貌、特征、象征意义与图片，并在列表与画廊两种视图中持续维护本地知识库。
+              </p>
+            </div>
+            <div class="hero-controls">
+              <label class="field search-field">
+                <span class="material-symbols-outlined" aria-hidden="true">search</span>
+                <input id="flower-search" type="search" placeholder="搜索花卉、学名或象征意义" />
+              </label>
+              <label class="field select-field">
+                <select id="flower-sort" aria-label="排序方式">
+                  <option value="name">名称 A-Z</option>
+                  <option value="recent">最新优先</option>
+                </select>
+              </label>
+              <div class="view-toggle-group" aria-label="花卉视图切换">
+                <button class="view-toggle is-active" id="list-view-grid" type="button" data-list-view="grid">
+                  列表模式
+                </button>
+                <button class="view-toggle" id="list-view-gallery" type="button" data-list-view="gallery">
+                  画廊模式
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <section class="card-grid" id="flower-grid" aria-live="polite"></section>
+
+          <section class="gallery-stage is-hidden" id="flower-gallery" aria-live="polite">
+            <div class="gallery-hint">
+              <span class="material-symbols-outlined" aria-hidden="true">swipe</span>
+              <span>拖动或滚动横向轴线浏览花卉画廊</span>
+            </div>
+            <div class="gallery-scroll" id="flower-gallery-scroll">
+              <div class="gallery-axis"></div>
+              <div class="gallery-track" id="flower-gallery-track"></div>
+            </div>
+          </section>
+        </section>
+
+        <section class="tab-panel map-panel" data-panel="map">
+          <aside class="map-sidebar">
+            <div class="sidebar-card map-library-card">
+              <div class="map-library-head">
+                <div>
+                  <p class="eyebrow">思维导图</p>
+                  <h2>Map Library</h2>
+                </div>
+                <button class="small-action" id="new-map-button" type="button">
+                  <span class="material-symbols-outlined" aria-hidden="true">add</span>
+                  <span>新增</span>
+                </button>
+              </div>
+              <div class="map-list" id="map-list"></div>
+            </div>
+
+            <div class="sidebar-card map-actions-card">
+              <p class="eyebrow">当前操作</p>
+              <div class="stack-actions">
+                <button class="ghost-button" id="present-map-button" type="button">
+                  <span class="material-symbols-outlined" aria-hidden="true">slideshow</span>
+                  <span>展示思维导图</span>
+                </button>
+                <button class="ghost-button danger-ghost" id="delete-map-button" type="button">
+                  <span class="material-symbols-outlined" aria-hidden="true">delete</span>
+                  <span>删除当前思维导图</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="sidebar-card">
+              <p class="eyebrow">当前统计</p>
+              <dl class="stats-list">
+                <div>
+                  <dt>花卉记录</dt>
+                  <dd id="stat-flowers">0</dd>
+                </div>
+                <div>
+                  <dt>导图节点</dt>
+                  <dd id="stat-nodes">0</dd>
+                </div>
+              </dl>
+            </div>
+
+            <div class="sidebar-card">
+              <p class="eyebrow">操作说明</p>
+              <ul class="note-list">
+                <li>拖动画布浏览导图，滚轮缩放。</li>
+                <li>点击节点右侧加号添加下级分支。</li>
+                <li>展示模式下可全屏查看当前导图。</li>
+              </ul>
+            </div>
+
+            <div class="sidebar-card sidebar-card-cta">
+              <button class="ghost-button" id="reset-map-view" type="button">
+                <span class="material-symbols-outlined" aria-hidden="true">center_focus_strong</span>
+                <span>重置画布视图</span>
+              </button>
+            </div>
+          </aside>
+
+          <section class="map-workspace">
+            <div class="map-toolbar">
+              <div class="map-toolbar-copy">
+                <p class="eyebrow">当前图谱</p>
+                <h3 id="active-map-title">默认思维导图</h3>
+              </div>
+              <label class="field search-field map-search-field">
+                <span class="material-symbols-outlined" aria-hidden="true">search</span>
+                <input id="map-search" type="search" placeholder="筛选节点或花卉记录" />
+              </label>
+              <div class="zoom-badge" id="zoom-badge">100%</div>
+            </div>
+            <div class="mindmap-viewport" id="mindmap-viewport">
+              <svg class="mindmap-svg" id="mindmap-svg" aria-hidden="true"></svg>
+              <div class="mindmap-canvas" id="mindmap-canvas"></div>
+            </div>
+          </section>
+        </section>
+      </main>
+
+      <button class="fab-button" id="new-record-button" type="button">
+        <span class="material-symbols-outlined" aria-hidden="true">add</span>
+        <span>New Record</span>
+      </button>
+    </div>
+
+    <section class="map-fullscreen-shell is-hidden" id="map-fullscreen">
+      <div class="map-fullscreen-topbar">
+        <div>
+          <p class="eyebrow">全屏展示</p>
+          <h2 id="fullscreen-map-title">思维导图展示</h2>
+        </div>
+        <button class="primary-button" id="close-fullscreen-map" type="button">
+          <span class="material-symbols-outlined" aria-hidden="true">close</span>
+          <span>关闭展示</span>
+        </button>
+      </div>
+      <div class="mindmap-viewport mindmap-viewport-fullscreen" id="fullscreen-mindmap-viewport">
+        <svg class="mindmap-svg" id="fullscreen-mindmap-svg" aria-hidden="true"></svg>
+        <div class="mindmap-canvas" id="fullscreen-mindmap-canvas"></div>
+      </div>
+    </section>
+
+    <div class="tooltip-card" id="flower-tooltip" hidden>
+      <div class="tooltip-image" id="tooltip-image"></div>
+      <div class="tooltip-body">
+        <h3 id="tooltip-name"></h3>
+        <p class="tooltip-scientific" id="tooltip-scientific"></p>
+        <p class="tooltip-description" id="tooltip-characteristics"></p>
+        <div class="tooltip-chip-row">
+          <span class="tooltip-chip" id="tooltip-symbolism"></span>
+        </div>
+      </div>
+    </div>
+
+    <dialog class="modal-shell" id="flower-modal">
+      <form class="modal-card" id="flower-form" novalidate>
+        <div class="modal-head">
+          <div>
+            <p class="eyebrow">花卉记录</p>
+            <h2 id="flower-modal-title">新建花卉记录</h2>
+          </div>
+          <button class="icon-button" type="button" data-dialog-close="flower-modal" aria-label="关闭">
+            <span class="material-symbols-outlined" aria-hidden="true">close</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <label class="stack-field">
+            <span>花卉名</span>
+            <input id="flower-name" type="text" />
+          </label>
+          <label class="stack-field">
+            <span>学名</span>
+            <input id="flower-scientific" type="text" />
+          </label>
+          <label class="stack-field">
+            <span>特征</span>
+            <textarea id="flower-characteristics" rows="4"></textarea>
+          </label>
+          <label class="stack-field">
+            <span>象征意义</span>
+            <input id="flower-symbolism" type="text" />
+          </label>
+          <div class="stack-field">
+            <span>图片</span>
+            <div class="image-field">
+              <button class="image-picker" id="flower-image-trigger" type="button">
+                <span class="material-symbols-outlined" aria-hidden="true">upload</span>
+                <span>选择图片</span>
+              </button>
+              <input id="flower-image" type="file" accept="image/*" />
+              <div class="image-preview-row">
+                <div class="image-preview" id="flower-image-preview"></div>
+                <div class="image-meta">
+                  <p id="flower-image-name">未选择图片</p>
+                  <button class="text-button" id="clear-flower-image" type="button">清除图片</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="secondary-button" type="button" data-dialog-close="flower-modal">取消</button>
+          <button class="primary-button" type="submit">保存记录</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal-shell" id="map-modal">
+      <form class="modal-card modal-card-compact" id="map-form" novalidate>
+        <div class="modal-head">
+          <div>
+            <p class="eyebrow">思维导图</p>
+            <h2>新建思维导图</h2>
+          </div>
+          <button class="icon-button" type="button" data-dialog-close="map-modal" aria-label="关闭">
+            <span class="material-symbols-outlined" aria-hidden="true">close</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <label class="stack-field">
+            <span>导图名称</span>
+            <input id="map-title-input" type="text" maxlength="40" placeholder="例如：节气花卉分类" />
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button class="secondary-button" type="button" data-dialog-close="map-modal">取消</button>
+          <button class="primary-button" type="submit">创建导图</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal-shell" id="branch-modal">
+      <form class="modal-card" id="branch-form">
+        <div class="modal-head">
+          <div>
+            <p class="eyebrow">新增分支</p>
+            <h2>添加导图节点</h2>
+          </div>
+          <button class="icon-button" type="button" data-dialog-close="branch-modal" aria-label="关闭">
+            <span class="material-symbols-outlined" aria-hidden="true">close</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <fieldset class="branch-type-group">
+            <label class="choice-card">
+              <input type="radio" name="branch-type" value="text" checked />
+              <span>文本分支</span>
+            </label>
+            <label class="choice-card">
+              <input type="radio" name="branch-type" value="flowerRef" />
+              <span>关联已有花卉</span>
+            </label>
+          </fieldset>
+          <label class="stack-field" id="branch-text-field">
+            <span>分支文本</span>
+            <input id="branch-text" type="text" />
+          </label>
+          <label class="stack-field is-hidden" id="branch-flower-field">
+            <span>选择花卉记录</span>
+            <select id="branch-flower-select"></select>
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button class="secondary-button" type="button" data-dialog-close="branch-modal">取消</button>
+          <button class="primary-button" type="submit">添加分支</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal-shell" id="confirm-modal">
+      <form class="modal-card modal-card-compact" id="confirm-form">
+        <div class="modal-head">
+          <div>
+            <p class="eyebrow">确认操作</p>
+            <h2 id="confirm-title">确认删除</h2>
+          </div>
+          <button class="icon-button" type="button" data-dialog-close="confirm-modal" aria-label="关闭">
+            <span class="material-symbols-outlined" aria-hidden="true">close</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p class="confirm-copy" id="confirm-copy"></p>
+        </div>
+        <div class="modal-actions">
+          <button class="secondary-button" type="button" data-dialog-close="confirm-modal">取消</button>
+          <button class="primary-button danger-button" type="submit" id="confirm-button">删除</button>
+        </div>
+      </form>
+    </dialog>
+
+    <div class="toast-stack" id="toast-stack" aria-live="polite" aria-atomic="true"></div>
+
+    <template id="empty-template">
+      <article class="empty-card">
+        <span class="material-symbols-outlined" aria-hidden="true">local_florist</span>
+        <h3>暂时还没有内容</h3>
+        <p>先创建一条花卉记录，或在导图中继续整理新的分类分支。</p>
+      </article>
+    </template>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
