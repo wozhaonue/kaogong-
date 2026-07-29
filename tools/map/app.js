@@ -1,4 +1,7 @@
+import { createSupabaseBrowserService } from "../../scripts/supabase-browser.js";
+
 const STORAGE_KEY = "china-gis-atlas-state-v1";
+const TOOL_KEY = "map";
 const DATA_VERSION = "2026-07-15-1";
 const CHINA_BOUNDS = [
   [73, 18],
@@ -44,6 +47,14 @@ let selectedCity = null;
 const featureMarkers = new Map();
 
 const dom = {
+  syncShell: document.getElementById("sync-shell"),
+  syncTitle: document.getElementById("sync-title"),
+  syncMeta: document.getElementById("sync-meta"),
+  syncSignIn: document.getElementById("sync-sign-in"),
+  syncSignOut: document.getElementById("sync-sign-out"),
+  authModal: document.getElementById("auth-modal"),
+  authForm: document.getElementById("auth-form"),
+  authEmail: document.getElementById("auth-email"),
   citySearch: document.getElementById("city-search"),
   cityResults: document.getElementById("city-results"),
   drawIndicator: document.getElementById("draw-mode-indicator"),
@@ -60,7 +71,219 @@ const dom = {
   helperText: document.querySelector(".helper-text")
 };
 
+const syncState = {
+  service: createSupabaseBrowserService(),
+  user: null,
+  isHydrating: false,
+  isSyncing: false,
+  timer: 0
+};
+
+function renderSyncUi() {
+  const configured = syncState.service.configured;
+  const signedIn = Boolean(syncState.user);
+  const busy = syncState.isHydrating || syncState.isSyncing;
+
+  if (!dom.syncShell) {
+    return;
+  }
+
+  dom.syncShell.dataset.mode = configured ? "cloud" : "local";
+  dom.syncSignIn.hidden = signedIn;
+  dom.syncSignOut.hidden = !signedIn;
+  dom.syncSignIn.disabled = !configured || busy;
+  dom.syncSignOut.disabled = busy;
+
+  if (!configured) {
+    dom.syncTitle.textContent = "本地模式";
+    dom.syncMeta.textContent = "未配置 Supabase，当前地图标注仅保存在本机浏览器。";
+    return;
+  }
+
+  if (!signedIn) {
+    dom.syncTitle.textContent = "可连接云同步";
+    dom.syncMeta.textContent = "登录后可在不同设备间共享同一份地图主题与自定义地理标注。";
+    return;
+  }
+
+  dom.syncTitle.textContent = busy ? "正在同步" : "云端同步已启用";
+  dom.syncMeta.textContent = syncState.user.email || "当前地图状态将自动同步到 Supabase。";
+}
+
+function bindSyncUi() {
+  dom.syncSignIn?.addEventListener("click", () => {
+    if (!syncState.service.configured || syncState.isHydrating || syncState.isSyncing) {
+      return;
+    }
+    dom.authEmail.value = syncState.user?.email || "";
+    dom.authModal.showModal();
+  });
+
+  dom.syncSignOut?.addEventListener("click", async () => {
+    if (!syncState.user || syncState.isHydrating || syncState.isSyncing) {
+      return;
+    }
+    try {
+      syncState.isSyncing = true;
+      renderSyncUi();
+      await syncState.service.signOut();
+      syncState.user = null;
+    } catch (error) {
+      console.error(error);
+      dom.syncShell.dataset.mode = "error";
+      dom.syncMeta.textContent = error.message || "退出同步失败";
+    } finally {
+      syncState.isSyncing = false;
+      renderSyncUi();
+    }
+  });
+
+  dom.authForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (event.submitter?.value === "cancel") {
+      dom.authModal.close();
+      return;
+    }
+
+    const email = dom.authEmail.value.trim();
+    if (!email) {
+      dom.authEmail.focus();
+      return;
+    }
+
+    try {
+      syncState.isSyncing = true;
+      renderSyncUi();
+      await syncState.service.signInWithOtp(email);
+      dom.authModal.close();
+      dom.syncMeta.textContent = "登录链接已发送，请完成邮箱验证后返回当前页面。";
+    } catch (error) {
+      console.error(error);
+      dom.syncShell.dataset.mode = "error";
+      dom.syncMeta.textContent = error.message || "发送登录链接失败";
+    } finally {
+      syncState.isSyncing = false;
+      renderSyncUi();
+    }
+  });
+}
+
+async function bootstrapSync() {
+  renderSyncUi();
+  if (!syncState.service.available) {
+    return;
+  }
+
+  syncState.service.onAuthStateChange(async (_event, session) => {
+    syncState.user = session?.user || null;
+    renderSyncUi();
+    if (syncState.user) {
+      await hydrateFromCloud();
+    }
+  });
+
+  try {
+    const session = await syncState.service.getSession();
+    syncState.user = session?.user || null;
+    renderSyncUi();
+    if (syncState.user) {
+      await hydrateFromCloud();
+    }
+  } catch (error) {
+    console.error(error);
+    dom.syncShell.dataset.mode = "error";
+    dom.syncMeta.textContent = error.message || "Supabase 初始化失败";
+  }
+}
+
+async function hydrateFromCloud() {
+  if (!syncState.user || !syncState.service.available) {
+    return;
+  }
+
+  syncState.isHydrating = true;
+  renderSyncUi();
+  try {
+    const payload = await syncState.service.fetchToolDocument(syncState.user.id, TOOL_KEY);
+    if (payload && typeof payload === "object") {
+      applyRemoteState(payload);
+      return;
+    }
+
+    if (hasLocalState()) {
+      await syncState.service.upsertToolDocument(syncState.user.id, TOOL_KEY, getSyncPayload());
+      return;
+    }
+  } catch (error) {
+    console.error(error);
+    dom.syncShell.dataset.mode = "error";
+    dom.syncMeta.textContent = error.message || "地图数据拉取失败";
+  } finally {
+    syncState.isHydrating = false;
+    renderSyncUi();
+  }
+}
+
+function hasLocalState() {
+  return Boolean(state.userFeatures.length || state.selectedFeatureId || state.theme !== "terrain-atlas");
+}
+
+function getSyncPayload() {
+  return {
+    selectedFeatureId: state.selectedFeatureId,
+    theme: state.theme,
+    userFeatures: structuredClone(state.userFeatures)
+  };
+}
+
+function applyRemoteState(payload) {
+  state.selectedFeatureId = payload.selectedFeatureId || null;
+  state.theme = payload.theme || "terrain-atlas";
+  state.userFeatures = Array.isArray(payload.userFeatures) ? payload.userFeatures : [];
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(getSyncPayload()));
+  if (dom.themeSelect) {
+    dom.themeSelect.value = state.theme;
+  }
+  if (map) {
+    applyTheme(state.theme);
+    syncUserFeatureSources();
+    renderFeatureLists();
+    if (state.selectedFeatureId) {
+      setSelectionHighlight(state.selectedFeatureId);
+    }
+  }
+}
+
+function scheduleCloudSync() {
+  if (!syncState.user || !syncState.service.available || syncState.isHydrating) {
+    return;
+  }
+  window.clearTimeout(syncState.timer);
+  syncState.timer = window.setTimeout(() => {
+    void flushCloudSync();
+  }, 400);
+}
+
+async function flushCloudSync() {
+  if (!syncState.user || !syncState.service.available || syncState.isHydrating) {
+    return;
+  }
+  syncState.isSyncing = true;
+  renderSyncUi();
+  try {
+    await syncState.service.upsertToolDocument(syncState.user.id, TOOL_KEY, getSyncPayload());
+  } catch (error) {
+    console.error(error);
+    dom.syncShell.dataset.mode = "error";
+    dom.syncMeta.textContent = error.message || "地图数据同步失败";
+  } finally {
+    syncState.isSyncing = false;
+    renderSyncUi();
+  }
+}
+
 async function init() {
+  bindSyncUi();
   const [provinces, rivers, lakes, terrainBounds, cityIndex] = await Promise.all([
     fetch(dataUrl("provinces.geojson")).then((r) => r.json()),
     fetch(dataUrl("rivers.geojson")).then((r) => r.json()),
@@ -79,6 +302,7 @@ async function init() {
     })
   };
   dom.themeSelect.value = state.theme;
+  await bootstrapSync();
 
   map = new maplibregl.Map({
     container: "map",
@@ -882,6 +1106,7 @@ function persistState() {
       userFeatures: state.userFeatures
     })
   );
+  scheduleCloudSync();
 }
 
 function displayTypeLegacy(type) {

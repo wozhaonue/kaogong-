@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Supabase 本地配置</title>
+    <meta
+      name="description"
+      content="为当前站点保存或清除 Supabase URL 与 anon key，便于本地联调多个纯前端工具页。"
+    />
+    <link rel="stylesheet" href="./setup.css" />
+  </head>
+  <body>
+    <main class="setup-shell">
+      <a class="back-link" href="../index.html">返回工具首页</a>
+
+      <section class="setup-card">
+        <header class="setup-header">
+          <p class="eyebrow">Supabase Sync Setup</p>
+          <h1>本地配置面板</h1>
+          <p class="lead">
+            这个页面会把 Supabase 配置写入当前站点同源的浏览器
+            <code>localStorage</code>，供 `policy-codex`、`map`、`flora`、`chronicles`
+            4 个工具页直接读取。
+          </p>
+        </header>
+
+        <dl class="info-grid">
+          <div>
+            <dt>当前站点</dt>
+            <dd id="current-origin">-</dd>
+          </div>
+          <div>
+            <dt>配置状态</dt>
+            <dd id="config-state">-</dd>
+          </div>
+          <div>
+            <dt>URL 存储键</dt>
+            <dd id="url-key">-</dd>
+          </div>
+          <div>
+            <dt>Anon Key 存储键</dt>
+            <dd id="anon-key">-</dd>
+          </div>
+        </dl>
+
+        <form id="setup-form" class="setup-form">
+          <label class="field">
+            <span>Supabase URL</span>
+            <input
+              id="supabase-url"
+              name="supabase-url"
+              type="url"
+              placeholder="https://your-project.supabase.co"
+              autocomplete="off"
+            />
+          </label>
+
+          <label class="field">
+            <span>Anon Key</span>
+            <textarea
+              id="supabase-anon-key"
+              name="supabase-anon-key"
+              rows="5"
+              placeholder="粘贴 Supabase anon key"
+              spellcheck="false"
+            ></textarea>
+          </label>
+
+          <div class="action-row">
+            <button class="primary-button" type="submit">保存到本机浏览器</button>
+            <button class="ghost-button" id="clear-config" type="button">清除本地配置</button>
+            <button class="ghost-button" id="reload-config" type="button">重新读取</button>
+          </div>
+        </form>
+
+        <section class="note-panel">
+          <h2>使用说明</h2>
+          <ol>
+            <li>先在 Supabase 中创建项目，并开启 Email OTP 登录。</li>
+            <li>把 `policy-codex-schema.sql` 和 `tool-documents-schema.sql` 执行到你的项目里。</li>
+            <li>在本页填写 URL 和 anon key 后保存。</li>
+            <li>回到各工具页刷新，即可看到“连接云同步”入口变为可用。</li>
+          </ol>
+          <p class="note-copy">
+            这个页面只影响当前浏览器和当前域名，不会把密钥提交回仓库，也不会影响其他设备。
+          </p>
+        </section>
+
+        <p class="status-banner" id="status-banner" data-tone="info">
+          尚未执行任何操作。
+        </p>
+      </section>
+    </main>
+
+    <script type="module" src="./setup.js"></script>
+  </body>
+</html>

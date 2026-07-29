@@ -161,6 +161,98 @@ h2 {
   line-height: 1.65;
 }
 
+.sync-shell {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+  padding: 16px 18px;
+  border: 1px solid rgba(93, 72, 45, 0.12);
+  border-radius: 22px;
+  background: rgba(255, 252, 245, 0.74);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82);
+}
+
+.sync-shell[data-mode="cloud"] {
+  border-color: rgba(112, 81, 46, 0.22);
+}
+
+.sync-shell[data-mode="error"] {
+  border-color: rgba(148, 73, 54, 0.24);
+}
+
+.sync-copy {
+  display: grid;
+  gap: 6px;
+}
+
+.sync-copy strong {
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent-strong);
+}
+
+.sync-shell[data-mode="error"] .sync-copy strong {
+  color: var(--danger);
+}
+
+.sync-copy span {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.sync-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.sync-actions .button {
+  flex: 1;
+}
+
+.sync-modal {
+  border: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.sync-modal::backdrop {
+  background: rgba(32, 24, 13, 0.36);
+  backdrop-filter: blur(8px);
+}
+
+.sync-modal-card {
+  width: min(540px, calc(100vw - 24px));
+  border: 1px solid var(--panel-border);
+  border-radius: 26px;
+  padding: 24px;
+  background:
+    linear-gradient(180deg, rgba(255, 253, 245, 0.98), rgba(240, 234, 221, 0.94)),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 140 140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.06'/%3E%3C/svg%3E");
+  box-shadow: var(--panel-shadow);
+}
+
+.sync-modal-head,
+.sync-modal-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.sync-modal-body {
+  margin: 18px 0 0;
+}
+
+.sync-modal-actions {
+  margin-top: 18px;
+}
+
+.sync-close-button {
+  padding-inline: 16px;
+}
+
 .field-label {
   display: block;
   margin-bottom: 10px;

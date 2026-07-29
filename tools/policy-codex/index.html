@@ -38,6 +38,14 @@
         </nav>
 
         <div class="topbar-tools">
+          <div class="sync-cluster" id="sync-cluster">
+            <div class="sync-copy">
+              <span class="sync-title" id="sync-title">本地模式</span>
+              <span class="sync-meta" id="sync-meta">未配置 Supabase，当前仅保存在本机浏览器中</span>
+            </div>
+            <button class="round-button" id="sync-sign-in" type="button">连接云同步</button>
+            <button class="round-button" id="sync-sign-out" type="button" hidden>退出同步</button>
+          </div>
           <label class="search-pill">
             <span class="material-symbols-outlined" aria-hidden="true">search</span>
             <input
@@ -369,6 +377,33 @@
       </form>
     </dialog>
 
+    <dialog class="modal-shell" id="auth-modal">
+      <form class="modal-card modal-card-confirm" method="dialog" id="auth-form">
+        <div class="modal-head">
+          <div>
+            <p class="eyebrow">Supabase Sync</p>
+            <h2>连接云端同步</h2>
+          </div>
+          <button class="icon-button" value="cancel" type="submit" title="关闭">
+            <span class="material-symbols-outlined" aria-hidden="true">close</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p class="confirm-copy">
+            输入已在 Supabase Auth 中启用的邮箱地址。系统会发送登录链接，登录后当前法典与文章将同步到云端。
+          </p>
+          <label class="stack-field">
+            <span>邮箱</span>
+            <input id="auth-email" type="email" autocomplete="email" placeholder="name@example.com" />
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button class="round-button" value="cancel" type="submit">取消</button>
+          <button class="round-button brass-button" id="auth-submit" type="submit">发送登录链接</button>
+        </div>
+      </form>
+    </dialog>
+
     <div class="toast-stack" id="toast-stack" aria-live="polite" aria-atomic="true"></div>
 
     <template id="empty-state-template">
@@ -379,6 +414,7 @@
       </div>
     </template>
 
-    <script type="module" src="./app.js?v=2026-07-20-1"></script>
+    <script src="../../scripts/vendor-supabase.js"></script>
+    <script type="module" src="./app.js?v=2026-07-29-supabase-1"></script>
   </body>
 </html>

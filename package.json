@@ -10,6 +10,7 @@
     "build:data": "node scripts/preprocess-data.mjs"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.110.9",
     "maplibre-gl": "5.24.0",
     "sharp": "0.35.3"
   }

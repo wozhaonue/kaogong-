@@ -38,6 +38,14 @@
         </div>
 
         <div class="toolbar-actions">
+          <div class="sync-cluster" id="sync-cluster">
+            <div class="sync-copy">
+              <strong id="sync-title">本地模式</strong>
+              <span id="sync-meta">未配置 Supabase，当前时间轴与事件档案仅保存在本机浏览器。</span>
+            </div>
+            <button class="sync-button" id="sync-sign-in" type="button">连接云同步</button>
+            <button class="sync-button" id="sync-sign-out" type="button" hidden>退出同步</button>
+          </div>
           <div class="mode-toggle" role="tablist" aria-label="视图模式">
             <button class="mode-button" id="mode-edit" type="button" data-mode="edit">编辑</button>
             <button class="mode-button" id="mode-display" type="button" data-mode="display">展示</button>
@@ -248,8 +256,27 @@
       </form>
     </dialog>
 
+    <dialog class="confirm-backdrop" id="auth-modal">
+      <form class="confirm-card rename-card" id="auth-form" method="dialog">
+        <div class="confirm-head">
+          <p class="sheet-kicker">Supabase Sync</p>
+          <h2>连接云端同步</h2>
+        </div>
+        <label class="field">
+          <span>邮箱</span>
+          <input id="auth-email" type="email" autocomplete="email" placeholder="name@example.com" />
+        </label>
+        <p class="confirm-copy">输入已启用 Supabase Auth 的邮箱。登录后时间轴、事件和图片档案会自动同步。</p>
+        <div class="confirm-actions">
+          <button class="ghost-button" type="submit" value="cancel">取消</button>
+          <button class="accent-button" id="auth-submit" type="submit">发送登录链接</button>
+        </div>
+      </form>
+    </dialog>
+
     <div class="toast-stack" id="toast-stack" aria-live="polite" aria-atomic="true"></div>
 
-    <script type="module" src="./app.js?v=2026-07-20-2"></script>
+    <script src="../../scripts/vendor-supabase.js"></script>
+    <script type="module" src="./app.js?v=2026-07-29-supabase-1"></script>
   </body>
 </html>

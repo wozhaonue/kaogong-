@@ -34,6 +34,14 @@
             </button>
           </nav>
           <div class="topbar-actions">
+            <div class="sync-cluster" id="sync-cluster">
+              <div class="sync-copy">
+                <strong id="sync-title">本地模式</strong>
+                <span id="sync-meta">未配置 Supabase，当前花卉档案与导图仅保存在本机浏览器。</span>
+              </div>
+              <button class="ghost-sync-button" id="sync-sign-in" type="button">连接云同步</button>
+              <button class="ghost-sync-button" id="sync-sign-out" type="button" hidden>退出同步</button>
+            </div>
             <a class="return-link" href="../../index.html">
               <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
               <span>回到工具入口</span>
@@ -349,6 +357,32 @@
       </article>
     </template>
 
-    <script src="./app.js"></script>
+    <dialog class="modal-shell" id="auth-modal">
+      <form class="modal-card modal-card-compact" id="auth-form">
+        <div class="modal-head">
+          <div>
+            <p class="eyebrow">Supabase Sync</p>
+            <h2>连接云端同步</h2>
+          </div>
+          <button class="icon-button" type="submit" value="cancel" aria-label="关闭">
+            <span class="material-symbols-outlined" aria-hidden="true">close</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <label class="stack-field">
+            <span>邮箱</span>
+            <input id="auth-email" type="email" autocomplete="email" placeholder="name@example.com" />
+          </label>
+          <p class="confirm-copy">输入已启用 Supabase Auth 的邮箱。登录后花卉记录、思维导图和图片会自动同步。</p>
+        </div>
+        <div class="modal-actions">
+          <button class="secondary-button" type="submit" value="cancel">取消</button>
+          <button class="primary-button" id="auth-submit" type="submit">发送登录链接</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="../../scripts/vendor-supabase.js"></script>
+    <script type="module" src="./app.js?v=2026-07-29-supabase-1"></script>
   </body>
 </html>

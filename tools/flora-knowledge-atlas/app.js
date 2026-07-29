@@ -1,9 +1,13 @@
+import { createSupabaseBrowserService } from "../../scripts/supabase-browser.js";
+
 const STORAGE_KEYS = {
   flowers: "flora-atlas-flowers-v1",
   maps: "flora-atlas-maps-v2",
   legacyMap: "flora-atlas-map-v1",
   ui: "flora-atlas-ui-v1"
 };
+
+const TOOL_KEY = "flora-knowledge-atlas";
 
 const IMAGE_DB = {
   name: "flora-atlas-assets-v1",
@@ -148,6 +152,14 @@ const runtime = {
 };
 
 const dom = {
+  syncCluster: document.getElementById("sync-cluster"),
+  syncTitle: document.getElementById("sync-title"),
+  syncMeta: document.getElementById("sync-meta"),
+  syncSignIn: document.getElementById("sync-sign-in"),
+  syncSignOut: document.getElementById("sync-sign-out"),
+  authModal: document.getElementById("auth-modal"),
+  authForm: document.getElementById("auth-form"),
+  authEmail: document.getElementById("auth-email"),
   tabs: Array.from(document.querySelectorAll("[data-tab]")),
   panels: Array.from(document.querySelectorAll("[data-panel]")),
   flowerSearch: document.getElementById("flower-search"),
@@ -215,6 +227,210 @@ const dom = {
   closeButtons: Array.from(document.querySelectorAll("[data-dialog-close]"))
 };
 
+const syncState = {
+  service: createSupabaseBrowserService(),
+  user: null,
+  isHydrating: false,
+  isSyncing: false,
+  timer: 0,
+  hasLocalCache: hasStoredLocalCache()
+};
+
+function renderSyncUi() {
+  const configured = syncState.service.configured;
+  const signedIn = Boolean(syncState.user);
+  const busy = syncState.isHydrating || syncState.isSyncing;
+
+  dom.syncCluster.dataset.mode = configured ? "cloud" : "local";
+  dom.syncSignIn.hidden = signedIn;
+  dom.syncSignOut.hidden = !signedIn;
+  dom.syncSignIn.disabled = !configured || busy;
+  dom.syncSignOut.disabled = busy;
+
+  if (!configured) {
+    dom.syncTitle.textContent = "本地模式";
+    dom.syncMeta.textContent = "未配置 Supabase，当前花卉档案与导图仅保存在本机浏览器。";
+    return;
+  }
+
+  if (!signedIn) {
+    dom.syncTitle.textContent = "可连接云同步";
+    dom.syncMeta.textContent = "登录后可在不同设备间共享花卉记录、思维导图和已上传图片。";
+    return;
+  }
+
+  dom.syncTitle.textContent = busy ? "正在同步" : "云端同步已启用";
+  dom.syncMeta.textContent = syncState.user.email || "当前花卉档案将自动同步到 Supabase。";
+}
+
+function bindSyncUi() {
+  dom.syncSignIn.addEventListener("click", function () {
+    if (!syncState.service.configured || syncState.isHydrating || syncState.isSyncing) {
+      return;
+    }
+    dom.authEmail.value = syncState.user?.email || "";
+    openAnimatedDialog(dom.authModal);
+  });
+
+  dom.syncSignOut.addEventListener("click", async function () {
+    if (!syncState.user || syncState.isHydrating || syncState.isSyncing) {
+      return;
+    }
+    try {
+      syncState.isSyncing = true;
+      renderSyncUi();
+      await syncState.service.signOut();
+      syncState.user = null;
+    } catch (error) {
+      console.error(error);
+      dom.syncCluster.dataset.mode = "error";
+      dom.syncMeta.textContent = error.message || "退出同步失败";
+    } finally {
+      syncState.isSyncing = false;
+      renderSyncUi();
+    }
+  });
+
+  dom.authForm.addEventListener("submit", async function (event) {
+    event.preventDefault();
+    if (event.submitter && event.submitter.value === "cancel") {
+      closeAnimatedDialog(dom.authModal);
+      return;
+    }
+
+    const email = dom.authEmail.value.trim();
+    if (!email) {
+      dom.authEmail.focus();
+      return;
+    }
+
+    try {
+      syncState.isSyncing = true;
+      renderSyncUi();
+      await syncState.service.signInWithOtp(email);
+      closeAnimatedDialog(dom.authModal);
+      dom.syncMeta.textContent = "登录链接已发送，请完成邮箱验证后返回当前页面。";
+    } catch (error) {
+      console.error(error);
+      dom.syncCluster.dataset.mode = "error";
+      dom.syncMeta.textContent = error.message || "发送登录链接失败";
+    } finally {
+      syncState.isSyncing = false;
+      renderSyncUi();
+    }
+  });
+}
+
+async function bootstrapSync() {
+  renderSyncUi();
+  if (!syncState.service.available) {
+    return;
+  }
+
+  syncState.service.onAuthStateChange(async function (_event, session) {
+    syncState.user = session?.user || null;
+    renderSyncUi();
+    if (syncState.user) {
+      await hydrateFromCloud();
+    }
+  });
+
+  try {
+    const session = await syncState.service.getSession();
+    syncState.user = session?.user || null;
+    renderSyncUi();
+    if (syncState.user) {
+      await hydrateFromCloud();
+    }
+  } catch (error) {
+    console.error(error);
+    dom.syncCluster.dataset.mode = "error";
+    dom.syncMeta.textContent = error.message || "Supabase 初始化失败";
+  }
+}
+
+async function hydrateFromCloud() {
+  if (!syncState.user || !syncState.service.available) {
+    return;
+  }
+
+  syncState.isHydrating = true;
+  renderSyncUi();
+  try {
+    const payload = await syncState.service.fetchToolDocument(syncState.user.id, TOOL_KEY);
+    if (payload && typeof payload === "object") {
+      await applyRemoteSnapshot(payload);
+      return;
+    }
+
+    if (syncState.hasLocalCache) {
+      await syncState.service.upsertToolDocument(syncState.user.id, TOOL_KEY, getSyncSnapshot());
+      return;
+    }
+
+    await applyRemoteSnapshot({ flowers: [], maps: [], images: [] });
+  } catch (error) {
+    console.error(error);
+    dom.syncCluster.dataset.mode = "error";
+    dom.syncMeta.textContent = error.message || "花卉数据拉取失败";
+  } finally {
+    syncState.isHydrating = false;
+    renderSyncUi();
+  }
+}
+
+function getSyncSnapshot() {
+  return {
+    flowers: structuredClone(state.flowers),
+    maps: structuredClone(state.maps),
+    images: Object.keys(state.imageCache).map(function (key) {
+      return structuredClone(state.imageCache[key]);
+    })
+  };
+}
+
+async function applyRemoteSnapshot(payload) {
+  state.flowers = Array.isArray(payload.flowers) ? structuredClone(payload.flowers) : [];
+  state.maps = Array.isArray(payload.maps)
+    ? payload.maps.map(sanitizeMapRecord).filter(Boolean)
+    : [];
+  await replaceAllImages(Array.isArray(payload.images) ? payload.images : []);
+  localStorage.setItem(STORAGE_KEYS.flowers, JSON.stringify(state.flowers));
+  localStorage.setItem(STORAGE_KEYS.maps, JSON.stringify(state.maps));
+  syncState.hasLocalCache = hasStoredLocalCache();
+  ensureCurrentMap();
+  render();
+}
+
+function scheduleCloudSync() {
+  if (!syncState.user || !syncState.service.available || syncState.isHydrating) {
+    return;
+  }
+  window.clearTimeout(syncState.timer);
+  syncState.timer = window.setTimeout(function () {
+    void flushCloudSync();
+  }, 450);
+}
+
+async function flushCloudSync() {
+  if (!syncState.user || !syncState.service.available || syncState.isHydrating) {
+    return;
+  }
+  syncState.hasLocalCache = true;
+  syncState.isSyncing = true;
+  renderSyncUi();
+  try {
+    await syncState.service.upsertToolDocument(syncState.user.id, TOOL_KEY, getSyncSnapshot());
+  } catch (error) {
+    console.error(error);
+    dom.syncCluster.dataset.mode = "error";
+    dom.syncMeta.textContent = error.message || "花卉数据同步失败";
+  } finally {
+    syncState.isSyncing = false;
+    renderSyncUi();
+  }
+}
+
 bootstrap().catch(function (error) {
   console.error(error);
   showToast("加载失败", "页面初始化时发生错误，已回退为占位内容。", "warning");
@@ -222,8 +438,10 @@ bootstrap().catch(function (error) {
 
 async function bootstrap() {
   ensureCurrentMap();
+  bindSyncUi();
   bindEvents();
   await hydrateImageCache();
+  await bootstrapSync();
   render();
 }
 
@@ -1448,12 +1666,12 @@ function getCurrentMap() {
 }
 
 function ensureCurrentMap() {
-  if (!state.maps.length) {
-    state.maps = structuredClone(demoMaps);
+  if (!state.ui.selectedMapId || !getMapById(state.ui.selectedMapId)) {
+    state.ui.selectedMapId = state.maps[0]?.id || "";
   }
 
-  if (!state.ui.selectedMapId || !getMapById(state.ui.selectedMapId)) {
-    state.ui.selectedMapId = state.maps[0].id;
+  if (!state.ui.selectedMapId) {
+    return;
   }
 
   ensureViewportForMap(state.ui.selectedMapId);
@@ -1635,6 +1853,36 @@ function loadCollection(key, fallback) {
   }
 }
 
+function hasStoredLocalCache() {
+  return hasNonEmptyCollection(STORAGE_KEYS.flowers) || hasNonEmptyCollection(STORAGE_KEYS.maps) || hasLegacyMapCache();
+}
+
+function hasNonEmptyCollection(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) {
+      return false;
+    }
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.length > 0;
+  } catch {
+    return false;
+  }
+}
+
+function hasLegacyMapCache() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.legacyMap);
+    if (!raw) {
+      return false;
+    }
+    const parsed = JSON.parse(raw);
+    return Boolean(parsed && typeof parsed === "object");
+  } catch {
+    return false;
+  }
+}
+
 function loadUiState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.ui);
@@ -1680,10 +1928,12 @@ function sanitizeViewportMap(source) {
 
 function persistFlowers() {
   localStorage.setItem(STORAGE_KEYS.flowers, JSON.stringify(state.flowers));
+  scheduleCloudSync();
 }
 
 function persistMaps() {
   localStorage.setItem(STORAGE_KEYS.maps, JSON.stringify(state.maps));
+  scheduleCloudSync();
 }
 
 function persistUi() {
@@ -1765,6 +2015,35 @@ async function getAllImages() {
     tx.oncomplete = function () {
       db.close();
     };
+  });
+}
+
+async function replaceAllImages(images) {
+  const db = await getImageDb();
+  await new Promise(function (resolve, reject) {
+    const tx = db.transaction(IMAGE_DB.store, "readwrite");
+    const store = tx.objectStore(IMAGE_DB.store);
+    const clearRequest = store.clear();
+    clearRequest.onerror = function () {
+      reject(clearRequest.error);
+    };
+    clearRequest.onsuccess = function () {
+      images.forEach(function (image) {
+        store.put(image);
+      });
+    };
+    tx.oncomplete = function () {
+      db.close();
+      resolve();
+    };
+    tx.onerror = function () {
+      reject(tx.error);
+    };
+  });
+
+  state.imageCache = {};
+  images.forEach(function (image) {
+    state.imageCache[image.id] = image;
   });
 }
 

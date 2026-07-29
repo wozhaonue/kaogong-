@@ -1,3 +1,5 @@
+import { createSupabaseBrowserService } from "../../scripts/supabase-browser.js";
+
 const STORAGE_KEYS = {
   articles: "policy-codex-articles-v1",
   codices: "policy-codex-codices-v1",
@@ -130,6 +132,11 @@ bootstrapSelections();
 const dom = {
   globalSearch: document.getElementById("global-search"),
   resetDemo: document.getElementById("reset-demo"),
+  syncCluster: document.getElementById("sync-cluster"),
+  syncTitle: document.getElementById("sync-title"),
+  syncMeta: document.getElementById("sync-meta"),
+  syncSignIn: document.getElementById("sync-sign-in"),
+  syncSignOut: document.getElementById("sync-sign-out"),
   tabs: [...document.querySelectorAll("[data-tab-target]")],
   modules: [...document.querySelectorAll("[data-module]")],
   moduleCodex: document.querySelector('[data-module="codex"]'),
@@ -185,6 +192,9 @@ const dom = {
   confirmModalTitle: document.getElementById("confirm-modal-title"),
   confirmModalMessage: document.getElementById("confirm-modal-message"),
   confirmSubmit: document.getElementById("confirm-submit"),
+  authModal: document.getElementById("auth-modal"),
+  authForm: document.getElementById("auth-form"),
+  authEmail: document.getElementById("auth-email"),
   toastStack: document.getElementById("toast-stack"),
   dialogs: [...document.querySelectorAll(".modal-shell")],
   emptyStateTemplate: document.getElementById("empty-state-template")
@@ -210,10 +220,24 @@ const runtimeState = {
   codexPanelMode: null
 };
 
+const syncState = {
+  service: createSupabaseBrowserService(),
+  user: null,
+  syncTimer: 0,
+  isHydrating: false,
+  isSyncing: false,
+  remoteHasData: false,
+  authSubscription: null
+};
+
 bindEvents();
 render();
+bootstrapApp();
 
 function bindEvents() {
+  dom.syncSignIn.addEventListener("click", handleSyncSignInClick);
+  dom.syncSignOut.addEventListener("click", handleSyncSignOutClick);
+
   dom.tabs.forEach((tab) => {
     tab.addEventListener("click", () => {
       state.ui.activeTab = tab.dataset.tabTarget;
@@ -233,10 +257,20 @@ function bindEvents() {
       title: "重置演示数据",
       message: "这会清空当前浏览器中的本地数据，并恢复默认演示内容。是否继续？",
       confirmLabel: "确认重置",
-      onConfirm: () => {
+      onConfirm: async () => {
         localStorage.removeItem(STORAGE_KEYS.articles);
         localStorage.removeItem(STORAGE_KEYS.codices);
         localStorage.removeItem(STORAGE_KEYS.ui);
+        state.articles = structuredClone(demoArticles);
+        state.codices = structuredClone(demoCodices);
+        state.ui = structuredClone(defaultUiState);
+        bootstrapSelections();
+        persistArticles({ skipSync: true });
+        persistCodices({ skipSync: true });
+        persistUiState();
+        if (syncState.user) {
+          await flushCloudSync();
+        }
         showToast({ title: "已重置", message: "演示数据已恢复，页面即将刷新。", tone: "info" });
         window.setTimeout(() => window.location.reload(), 420);
       }
@@ -318,6 +352,7 @@ function bindEvents() {
   dom.codexForm.addEventListener("submit", handleCodexFormSubmit);
   dom.entryForm.addEventListener("submit", handleEntryFormSubmit);
   dom.confirmForm.addEventListener("submit", handleConfirmSubmit);
+  dom.authForm.addEventListener("submit", handleAuthSubmit);
   dom.confirmModal.addEventListener("close", clearConfirmAction);
 
   dom.dialogs.forEach((dialog) => {
@@ -329,6 +364,7 @@ function bindEvents() {
 }
 
 function render() {
+  renderSyncUi();
   dom.globalSearch.value = state.ui.globalQuery;
   dom.tabs.forEach((tab) => {
     tab.classList.toggle("is-active", tab.dataset.tabTarget === state.ui.activeTab);
@@ -339,6 +375,261 @@ function render() {
 
   renderArticleModule();
   renderCodexModule({ immediatePanels: runtimeState.codexPanelMode === null });
+}
+
+async function bootstrapApp() {
+  if (!syncState.service.available) {
+    renderSyncUi();
+    return;
+  }
+
+  syncState.authSubscription = syncState.service.onAuthStateChange(async (_event, session) => {
+    syncState.user = session?.user || null;
+    if (!syncState.user) {
+      renderSyncUi();
+      return;
+    }
+    try {
+      await hydrateFromCloud();
+    } catch (error) {
+      handleSyncError(error, "云端数据拉取失败");
+    }
+  });
+
+  try {
+    const session = await syncState.service.getSession();
+    syncState.user = session?.user || null;
+    if (syncState.user) {
+      await hydrateFromCloud();
+    } else {
+      renderSyncUi();
+    }
+  } catch (error) {
+    handleSyncError(error, "Supabase 会话初始化失败");
+  }
+}
+
+function renderSyncUi() {
+  const configured = syncState.service.configured;
+  const signedIn = Boolean(syncState.user);
+  const cluster = dom.syncCluster;
+  const isBusy = syncState.isHydrating || syncState.isSyncing;
+
+  dom.syncSignIn.hidden = signedIn;
+  dom.syncSignOut.hidden = !signedIn;
+  dom.syncSignIn.disabled = !configured || isBusy;
+  dom.syncSignOut.disabled = isBusy;
+  dom.resetDemo.disabled = isBusy;
+  document.querySelector(".topbar")?.classList.toggle("is-busy", isBusy);
+
+  if (!configured) {
+    cluster.dataset.mode = "local";
+    dom.syncTitle.textContent = "本地模式";
+    dom.syncMeta.textContent = "未配置 Supabase，当前仅保存在本机浏览器中";
+    dom.syncSignIn.textContent = "待配置";
+    return;
+  }
+
+  if (!signedIn) {
+    cluster.dataset.mode = "cloud";
+    dom.syncTitle.textContent = "可连接云同步";
+    dom.syncMeta.textContent = "登录后可在不同设备间共享同一份政策法典数据";
+    dom.syncSignIn.textContent = isBusy ? "连接中..." : "连接云同步";
+    return;
+  }
+
+  cluster.dataset.mode = "cloud";
+  dom.syncTitle.textContent = syncState.isSyncing ? "正在同步" : "云端同步已启用";
+  dom.syncMeta.textContent = syncState.user.email || "当前账号已连接 Supabase";
+  dom.syncSignOut.textContent = isBusy ? "处理中..." : "退出同步";
+}
+
+function handleSyncSignInClick() {
+  if (!syncState.service.configured || syncState.isHydrating || syncState.isSyncing) {
+    return;
+  }
+  dom.authEmail.value = syncState.user?.email || "";
+  openAnimatedDialog(dom.authModal);
+}
+
+async function handleSyncSignOutClick() {
+  if (!syncState.service.available || syncState.isHydrating || syncState.isSyncing) {
+    return;
+  }
+
+  try {
+    syncState.isSyncing = true;
+    renderSyncUi();
+    await syncState.service.signOut();
+    syncState.user = null;
+    syncState.remoteHasData = false;
+    renderSyncUi();
+    showToast({
+      title: "已退出云同步",
+      message: "当前页面已恢复为本地模式，浏览器中的缓存内容仍会保留。",
+      tone: "info"
+    });
+  } catch (error) {
+    handleSyncError(error, "退出同步失败");
+  } finally {
+    syncState.isSyncing = false;
+    renderSyncUi();
+  }
+}
+
+async function handleAuthSubmit(event) {
+  if (event.submitter?.value === "cancel") {
+    event.preventDefault();
+    closeAnimatedDialog(dom.authModal);
+    return;
+  }
+
+  event.preventDefault();
+  const email = dom.authEmail.value.trim();
+  if (!email) {
+    dom.authEmail.focus();
+    showToast({ title: "缺少邮箱", message: "请输入用于 Supabase 登录的邮箱地址。", tone: "warning" });
+    return;
+  }
+
+  try {
+    syncState.isSyncing = true;
+    renderSyncUi();
+    await syncState.service.signInWithOtp(email);
+    closeAnimatedDialog(dom.authModal);
+    showToast({
+      title: "登录链接已发送",
+      message: "请在邮箱中打开 Supabase 登录链接，返回当前页面后会自动开始同步。",
+      tone: "success",
+      duration: 3600
+    });
+  } catch (error) {
+    handleSyncError(error, "发送登录链接失败");
+  } finally {
+    syncState.isSyncing = false;
+    renderSyncUi();
+  }
+}
+
+async function hydrateFromCloud() {
+  if (!syncState.service.available || !syncState.user) {
+    return;
+  }
+
+  syncState.isHydrating = true;
+  renderSyncUi();
+  try {
+    const snapshot = await syncState.service.fetchPolicyCodexSnapshot(syncState.user.id);
+    const remoteHasData = Boolean(snapshot.articles.length || snapshot.codices.length);
+    syncState.remoteHasData = remoteHasData;
+
+    if (remoteHasData) {
+      applySnapshot(snapshot);
+      showToast({
+        title: "云端数据已载入",
+        message: "当前页面已切换为 Supabase 中保存的数据。",
+        tone: "success"
+      });
+      return;
+    }
+
+    if (hasStoredLocalCache()) {
+      await syncState.service.pushPolicyCodexSnapshot(syncState.user.id, getCurrentSnapshot());
+      syncState.remoteHasData = true;
+      showToast({
+        title: "本地数据已迁移",
+        message: "检测到已有本地缓存，现已自动导入 Supabase。",
+        tone: "success"
+      });
+      return;
+    }
+
+    applySnapshot({ articles: [], codices: [] });
+    showToast({
+      title: "云端空间为空",
+      message: "当前账号下还没有同步数据，接下来新建或编辑内容后会自动上传。",
+      tone: "info"
+    });
+  } finally {
+    syncState.isHydrating = false;
+    renderSyncUi();
+  }
+}
+
+function scheduleCloudSync() {
+  if (!syncState.service.available || !syncState.user || syncState.isHydrating) {
+    return;
+  }
+
+  window.clearTimeout(syncState.syncTimer);
+  syncState.syncTimer = window.setTimeout(() => {
+    void flushCloudSync();
+  }, 480);
+}
+
+async function flushCloudSync() {
+  if (!syncState.service.available || !syncState.user || syncState.isHydrating) {
+    return;
+  }
+
+  syncState.isSyncing = true;
+  renderSyncUi();
+  try {
+    await syncState.service.pushPolicyCodexSnapshot(syncState.user.id, getCurrentSnapshot());
+    syncState.remoteHasData = true;
+  } catch (error) {
+    handleSyncError(error, "云端同步失败");
+  } finally {
+    syncState.isSyncing = false;
+    renderSyncUi();
+  }
+}
+
+function getCurrentSnapshot() {
+  return {
+    articles: structuredClone(state.articles),
+    codices: structuredClone(state.codices)
+  };
+}
+
+function applySnapshot(snapshot) {
+  state.articles = Array.isArray(snapshot?.articles) ? structuredClone(snapshot.articles) : [];
+  state.codices = Array.isArray(snapshot?.codices) ? structuredClone(snapshot.codices) : [];
+  bootstrapSelections();
+  draftFlags.articleDirty = false;
+  persistArticles({ skipSync: true });
+  persistCodices({ skipSync: true });
+  persistUiState();
+  render();
+}
+
+function hasStoredLocalCache() {
+  return hasNonEmptyCollection(STORAGE_KEYS.articles) || hasNonEmptyCollection(STORAGE_KEYS.codices);
+}
+
+function hasNonEmptyCollection(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) {
+      return false;
+    }
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.length > 0;
+  } catch {
+    return false;
+  }
+}
+
+function handleSyncError(error, fallbackMessage) {
+  const detail = error?.message || fallbackMessage;
+  dom.syncCluster.dataset.mode = "error";
+  dom.syncMeta.textContent = detail;
+  showToast({
+    title: "同步异常",
+    message: detail,
+    tone: "warning",
+    duration: 3600
+  });
 }
 
 function renderArticleModule() {
@@ -1026,7 +1317,7 @@ function openConfirmModal({ title, message, confirmLabel = "确认", onConfirm }
   openAnimatedDialog(dom.confirmModal);
 }
 
-function handleConfirmSubmit(event) {
+async function handleConfirmSubmit(event) {
   event.preventDefault();
   if (event.submitter?.value === "cancel") {
     closeConfirmModal();
@@ -1035,7 +1326,7 @@ function handleConfirmSubmit(event) {
   const action = modalState.confirmAction;
   closeConfirmModal();
   if (typeof action === "function") {
-    action();
+    await action();
   }
 }
 
@@ -1201,7 +1492,7 @@ function loadCollection(key, fallback) {
       return structuredClone(fallback);
     }
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) && parsed.length ? parsed : structuredClone(fallback);
+    return Array.isArray(parsed) ? parsed : structuredClone(fallback);
   } catch {
     return structuredClone(fallback);
   }
@@ -1216,12 +1507,18 @@ function loadUiState() {
   }
 }
 
-function persistArticles() {
+function persistArticles(options = {}) {
   localStorage.setItem(STORAGE_KEYS.articles, JSON.stringify(state.articles));
+  if (!options.skipSync) {
+    scheduleCloudSync();
+  }
 }
 
-function persistCodices() {
+function persistCodices(options = {}) {
   localStorage.setItem(STORAGE_KEYS.codices, JSON.stringify(state.codices));
+  if (!options.skipSync) {
+    scheduleCloudSync();
+  }
 }
 
 function persistUiState() {

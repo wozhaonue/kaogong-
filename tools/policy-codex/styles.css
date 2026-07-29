@@ -137,6 +137,55 @@ a {
   justify-content: flex-end;
   align-items: center;
   gap: 16px;
+  flex-wrap: wrap;
+}
+
+.sync-cluster {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid rgba(44, 62, 47, 0.12);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.42);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.68);
+}
+
+.sync-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 220px;
+}
+
+.sync-title {
+  font-size: 12px;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--forest-strong);
+}
+
+.sync-meta {
+  font-size: 12px;
+  line-height: 1.45;
+  color: #667062;
+}
+
+.sync-cluster[data-mode="cloud"] .sync-title {
+  color: #32553a;
+}
+
+.sync-cluster[data-mode="error"] .sync-title {
+  color: #9b5c2a;
+}
+
+.sync-cluster .round-button {
+  min-height: 36px;
+}
+
+.topbar.is-busy .sync-cluster {
+  border-color: rgba(181, 139, 92, 0.28);
 }
 
 .search-pill,
@@ -1362,6 +1411,10 @@ a {
     justify-items: center;
   }
 
+  .topbar-tools {
+    justify-content: center;
+  }
+
   .module-articles,
   .entry-card-shell {
     grid-template-columns: 1fr;
@@ -1381,6 +1434,15 @@ a {
   .workspace,
   .footer-shell {
     width: min(100% - 20px, 100%);
+  }
+
+  .sync-cluster {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .sync-copy {
+    min-width: 0;
   }
 
   .editor-grid {

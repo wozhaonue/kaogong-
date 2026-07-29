@@ -1,6 +1,6 @@
 # ditu
 
-一个以静态文件为主的前端工具站点，首页作为工具入口，`tools/` 目录下挂载各个独立子页面。当前包含中国 GIS 地图工具，以及两个示例工具页。
+一个以静态文件为主的前端工具站点，首页作为工具入口，`tools/` 目录下挂载各个独立子页面。当前包含中国 GIS 地图工具，以及多个以纯前端实现的专题工具页。
 
 ## 项目结构
 
@@ -14,9 +14,19 @@
 ├─ scripts/
 │  ├─ landing.js               首页工具卡片渲染
 │  ├─ copy-maplibre.mjs        复制 MapLibre 前端资源
-│  └─ preprocess-data.mjs      预处理地图数据
+│  ├─ preprocess-data.mjs      预处理地图数据
+│  ├─ supabase-config.js       Supabase 前端配置读取
+│  ├─ supabase-browser.js      Supabase 浏览器端同步封装
+│  └─ vendor-supabase.js       vendored Supabase 浏览器脚本
+├─ supabase/
+│  ├─ README.md                Supabase 同步接入说明
+│  ├─ policy-codex-schema.sql  政策法典库结构化表
+│  └─ tool-documents-schema.sql 通用工具快照表
 ├─ tools/
 │  ├─ map/                     中国 GIS 地图工具
+│  ├─ policy-codex/            政策法典与时政积累工具
+│  ├─ chronicles-history-map/  历史时间轴工具
+│  ├─ flora-knowledge-atlas/   花卉积累与思维导图工具
 │  ├─ color-lab/               示例工具页
 │  └─ insight-board/           示例工具页
 └─ .github/workflows/
@@ -59,6 +69,40 @@ npm run start
 ```text
 http://127.0.0.1:4173
 ```
+
+## Supabase 本地联调
+
+当前仓库中这 4 个工具页已经接入 Supabase 同步入口：
+
+- `tools/policy-codex/`
+- `tools/map/`
+- `tools/flora-knowledge-atlas/`
+- `tools/chronicles-history-map/`
+
+默认情况下，仓库不会提交真实的 Supabase `url` 和 `anon key`。本地联调可使用以下 3 种方式注入配置，优先级从高到低如下：
+
+1. 浏览器 `localStorage`
+2. 页面级全局变量 `window.__DITU_SUPABASE_CONFIG__`
+3. `scripts/supabase-config.js` 中的 `FILE_DEFAULTS`
+
+最方便的临时联调方式是直接在浏览器控制台写入：
+
+```js
+localStorage.setItem("ditu-supabase-url", "https://your-project.supabase.co");
+localStorage.setItem("ditu-supabase-anon-key", "your-anon-key");
+```
+
+清除临时配置：
+
+```js
+localStorage.removeItem("ditu-supabase-url");
+localStorage.removeItem("ditu-supabase-anon-key");
+```
+
+如果需要看完整的表结构、同步策略和当前接入范围，查看：
+
+- `supabase/README.md`
+- `supabase/index.html`
 
 ## 为什么本地要用服务器启动
 

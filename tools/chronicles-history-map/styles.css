@@ -148,6 +148,62 @@ a {
   display: flex;
   align-items: center;
   gap: 14px;
+  min-width: 0;
+  justify-content: flex-end;
+}
+
+.sync-cluster {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid rgba(220, 192, 191, 0.92);
+  background: rgba(255, 255, 255, 0.68);
+  min-width: 0;
+  max-width: 320px;
+}
+
+.sync-cluster[data-mode="error"] {
+  border-color: rgba(99, 13, 22, 0.34);
+}
+
+.sync-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+
+.sync-copy strong {
+  color: var(--wine);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.sync-cluster[data-mode="error"] .sync-copy strong {
+  color: var(--wine-strong);
+}
+
+.sync-copy span {
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 1.45;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sync-button {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid rgba(220, 192, 191, 0.92);
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--ink-soft);
+}
+
+.sync-button:hover {
+  background: rgba(255, 255, 255, 0.96);
+  color: var(--wine);
 }
 
 .mode-toggle {
@@ -1110,6 +1166,14 @@ a {
     font-size: 46px;
   }
 
+  .sync-cluster {
+    max-width: 260px;
+  }
+
+  .sync-copy span {
+    display: none;
+  }
+
   .timeline-heading {
     left: 24px;
   }
@@ -1136,6 +1200,20 @@ a {
 
   .toolbar-actions {
     gap: 8px;
+  }
+
+  .sync-cluster {
+    max-width: 188px;
+    padding: 6px 8px;
+  }
+
+  .sync-copy {
+    min-width: 0;
+  }
+
+  .sync-button {
+    padding: 0 10px;
+    font-size: 14px;
   }
 
   .mode-button {

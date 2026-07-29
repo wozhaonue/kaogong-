@@ -1,0 +1,246 @@
+:root {
+  color-scheme: light;
+  --bg: #f3efe7;
+  --panel: rgba(255, 252, 247, 0.94);
+  --ink: #1f2a24;
+  --muted: #607065;
+  --line: rgba(31, 42, 36, 0.14);
+  --accent: #28543d;
+  --accent-strong: #1f4532;
+  --accent-soft: rgba(40, 84, 61, 0.1);
+  --warn: #8b5f1d;
+  --shadow: 0 24px 60px rgba(27, 39, 33, 0.12);
+  --radius: 22px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Inter", "Segoe UI", sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at top, rgba(116, 149, 124, 0.12), transparent 34%),
+    linear-gradient(180deg, #f7f3eb 0%, var(--bg) 100%);
+}
+
+code {
+  padding: 0.1rem 0.32rem;
+  border-radius: 0.42rem;
+  background: rgba(31, 42, 36, 0.08);
+  font-family: "Cascadia Code", "SFMono-Regular", monospace;
+  font-size: 0.92em;
+}
+
+.setup-shell {
+  width: min(920px, calc(100vw - 32px));
+  margin: 0 auto;
+  padding: 32px 0 56px;
+}
+
+.back-link {
+  display: inline-flex;
+  margin-bottom: 18px;
+  color: var(--accent-strong);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.setup-card {
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(14px);
+}
+
+.eyebrow {
+  margin: 0 0 10px;
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.setup-header h1 {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.05;
+}
+
+.lead {
+  margin: 14px 0 0;
+  max-width: 720px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 24px 0 28px;
+}
+
+.info-grid div {
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.56);
+}
+
+.info-grid dt {
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.info-grid dd {
+  margin: 0;
+  font-weight: 600;
+  word-break: break-all;
+}
+
+.setup-form {
+  display: grid;
+  gap: 18px;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+}
+
+.field span {
+  font-weight: 600;
+}
+
+.field input,
+.field textarea {
+  width: 100%;
+  padding: 13px 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.84);
+  color: var(--ink);
+  font: inherit;
+}
+
+.field input:focus,
+.field textarea:focus {
+  outline: 2px solid rgba(40, 84, 61, 0.15);
+  border-color: rgba(40, 84, 61, 0.4);
+}
+
+.field textarea {
+  resize: vertical;
+  min-height: 132px;
+}
+
+.action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.primary-button,
+.ghost-button {
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 18px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primary-button {
+  background: var(--accent);
+  color: #fff;
+}
+
+.primary-button:hover {
+  background: var(--accent-strong);
+}
+
+.ghost-button {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+.ghost-button:hover {
+  background: rgba(40, 84, 61, 0.16);
+}
+
+.note-panel {
+  margin-top: 26px;
+  padding: 18px 18px 16px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.52);
+}
+
+.note-panel h2 {
+  margin: 0 0 10px;
+  font-size: 1.08rem;
+}
+
+.note-panel ol {
+  margin: 0;
+  padding-left: 1.2rem;
+  line-height: 1.75;
+}
+
+.note-copy {
+  margin: 14px 0 0;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.status-banner {
+  margin: 22px 0 0;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.64);
+  font-weight: 600;
+}
+
+.status-banner[data-tone="success"] {
+  color: var(--accent-strong);
+  background: rgba(40, 84, 61, 0.1);
+}
+
+.status-banner[data-tone="warning"] {
+  color: #7a4f15;
+  background: rgba(139, 95, 29, 0.1);
+}
+
+@media (max-width: 720px) {
+  .setup-shell {
+    width: min(100vw - 20px, 920px);
+    padding-top: 18px;
+  }
+
+  .setup-card {
+    padding: 20px;
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .action-row {
+    flex-direction: column;
+  }
+
+  .primary-button,
+  .ghost-button {
+    width: 100%;
+  }
+}

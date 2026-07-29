@@ -174,6 +174,64 @@ textarea {
   border-bottom-color: var(--primary);
 }
 
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.sync-cluster {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: 18px;
+  border: 1px solid rgba(163, 177, 138, 0.22);
+  background: rgba(248, 250, 246, 0.86);
+  box-shadow: 0 10px 24px rgba(18, 36, 28, 0.05);
+}
+
+.sync-cluster[data-mode="error"] {
+  border-color: rgba(146, 70, 64, 0.26);
+}
+
+.sync-copy {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 15rem;
+}
+
+.sync-copy strong {
+  color: var(--primary);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.sync-cluster[data-mode="error"] .sync-copy strong {
+  color: #924640;
+}
+
+.sync-copy span {
+  color: var(--text-soft);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.ghost-sync-button {
+  min-height: 2.4rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: var(--radius-pill);
+  background: rgba(163, 177, 138, 0.12);
+  color: var(--primary);
+  transition: transform var(--motion-fast), background-color var(--motion-fast);
+}
+
+.ghost-sync-button:hover {
+  transform: translateY(-1px);
+  background: rgba(163, 177, 138, 0.18);
+}
+
 .return-link {
   display: inline-flex;
   align-items: center;
@@ -1288,6 +1346,10 @@ textarea {
   margin: 0;
   color: var(--text-soft);
   line-height: 1.7;
+}
+
+#auth-form .confirm-copy {
+  font-size: 0.92rem;
 }
 
 .toast-stack {

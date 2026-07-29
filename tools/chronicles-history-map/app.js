@@ -1,7 +1,10 @@
+import { createSupabaseBrowserService } from "../../scripts/supabase-browser.js";
+
 const DB_NAME = "chronicles-history-map-v1";
 const DB_VERSION = 1;
 const UI_KEY = "chronicles-history-map-ui-v1";
 const CANVAS_MIN_WIDTH = 3400;
+const TOOL_KEY = "chronicles-history-map";
 
 const TEXT = {
   toolTitle: "Chronicles",
@@ -221,6 +224,14 @@ const state = {
 };
 
 const dom = {
+  syncCluster: document.getElementById("sync-cluster"),
+  syncTitle: document.getElementById("sync-title"),
+  syncMeta: document.getElementById("sync-meta"),
+  syncSignIn: document.getElementById("sync-sign-in"),
+  syncSignOut: document.getElementById("sync-sign-out"),
+  authModal: document.getElementById("auth-modal"),
+  authForm: document.getElementById("auth-form"),
+  authEmail: document.getElementById("auth-email"),
   searchInput: document.getElementById("search-input"),
   modeEdit: document.getElementById("mode-edit"),
   modeDisplay: document.getElementById("mode-display"),
@@ -271,14 +282,212 @@ const dom = {
   toastStack: document.getElementById("toast-stack")
 };
 
+const syncState = {
+  service: createSupabaseBrowserService(),
+  user: null,
+  isHydrating: false,
+  isSyncing: false,
+  timer: 0,
+  hasLocalCache: false
+};
+
+function renderSyncUi() {
+  const configured = syncState.service.configured;
+  const signedIn = Boolean(syncState.user);
+  const busy = syncState.isHydrating || syncState.isSyncing;
+
+  dom.syncCluster.dataset.mode = configured ? "cloud" : "local";
+  dom.syncSignIn.hidden = signedIn;
+  dom.syncSignOut.hidden = !signedIn;
+  dom.syncSignIn.disabled = !configured || busy;
+  dom.syncSignOut.disabled = busy;
+
+  if (!configured) {
+    dom.syncTitle.textContent = "本地模式";
+    dom.syncMeta.textContent = "未配置 Supabase，当前时间轴与事件档案仅保存在本机浏览器。";
+    return;
+  }
+
+  if (!signedIn) {
+    dom.syncTitle.textContent = "可连接云同步";
+    dom.syncMeta.textContent = "登录后可在不同设备间共享时间轴、事件卡片与图片档案。";
+    return;
+  }
+
+  dom.syncTitle.textContent = busy ? "正在同步" : "云端同步已启用";
+  dom.syncMeta.textContent = syncState.user.email || "当前时间轴档案将自动同步到 Supabase。";
+}
+
+function bindSyncUi() {
+  dom.syncSignIn.addEventListener("click", () => {
+    if (!syncState.service.configured || syncState.isHydrating || syncState.isSyncing) {
+      return;
+    }
+    dom.authEmail.value = syncState.user?.email || "";
+    dom.authModal.showModal();
+  });
+
+  dom.syncSignOut.addEventListener("click", async () => {
+    if (!syncState.user || syncState.isHydrating || syncState.isSyncing) {
+      return;
+    }
+    try {
+      syncState.isSyncing = true;
+      renderSyncUi();
+      await syncState.service.signOut();
+      syncState.user = null;
+    } catch (error) {
+      console.error(error);
+      dom.syncCluster.dataset.mode = "error";
+      dom.syncMeta.textContent = error.message || "退出同步失败";
+    } finally {
+      syncState.isSyncing = false;
+      renderSyncUi();
+    }
+  });
+
+  dom.authForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (event.submitter?.value === "cancel") {
+      if (dom.authModal.open) {
+        dom.authModal.close();
+      }
+      return;
+    }
+
+    const email = dom.authEmail.value.trim();
+    if (!email) {
+      dom.authEmail.focus();
+      return;
+    }
+
+    try {
+      syncState.isSyncing = true;
+      renderSyncUi();
+      await syncState.service.signInWithOtp(email);
+      if (dom.authModal.open) {
+        dom.authModal.close();
+      }
+      dom.syncMeta.textContent = "登录链接已发送，请完成邮箱验证后返回当前页面。";
+    } catch (error) {
+      console.error(error);
+      dom.syncCluster.dataset.mode = "error";
+      dom.syncMeta.textContent = error.message || "发送登录链接失败";
+    } finally {
+      syncState.isSyncing = false;
+      renderSyncUi();
+    }
+  });
+}
+
+async function bootstrapSync() {
+  renderSyncUi();
+  if (!syncState.service.available) {
+    return;
+  }
+
+  syncState.service.onAuthStateChange(async (_event, session) => {
+    syncState.user = session?.user || null;
+    renderSyncUi();
+    if (syncState.user) {
+      await hydrateFromCloud();
+    }
+  });
+
+  try {
+    const session = await syncState.service.getSession();
+    syncState.user = session?.user || null;
+    renderSyncUi();
+    if (syncState.user) {
+      await hydrateFromCloud();
+    }
+  } catch (error) {
+    console.error(error);
+    dom.syncCluster.dataset.mode = "error";
+    dom.syncMeta.textContent = error.message || "Supabase 初始化失败";
+  }
+}
+
+async function hydrateFromCloud() {
+  if (!syncState.user || !syncState.service.available) {
+    return;
+  }
+
+  syncState.isHydrating = true;
+  renderSyncUi();
+  try {
+    const payload = await syncState.service.fetchToolDocument(syncState.user.id, TOOL_KEY);
+    if (payload && typeof payload === "object") {
+      await replaceChroniclesData(payload);
+      render();
+      return;
+    }
+
+    if (syncState.hasLocalCache) {
+      await syncState.service.upsertToolDocument(syncState.user.id, TOOL_KEY, getChroniclesSnapshot());
+      return;
+    }
+
+    await replaceChroniclesData({ timelines: [], events: [], images: [] });
+    render();
+  } catch (error) {
+    console.error(error);
+    dom.syncCluster.dataset.mode = "error";
+    dom.syncMeta.textContent = error.message || "时间轴数据拉取失败";
+  } finally {
+    syncState.isHydrating = false;
+    renderSyncUi();
+  }
+}
+
+function getChroniclesSnapshot() {
+  return {
+    timelines: structuredClone(state.timelines),
+    events: structuredClone(state.events),
+    images: Array.from(state.images.values()).map((item) => structuredClone(item))
+  };
+}
+
+function scheduleCloudSync() {
+  if (!syncState.user || !syncState.service.available || syncState.isHydrating) {
+    return;
+  }
+  window.clearTimeout(syncState.timer);
+  syncState.timer = window.setTimeout(() => {
+    void flushCloudSync();
+  }, 450);
+}
+
+async function flushCloudSync() {
+  if (!syncState.user || !syncState.service.available || syncState.isHydrating) {
+    return;
+  }
+  syncState.hasLocalCache = true;
+  syncState.isSyncing = true;
+  renderSyncUi();
+  try {
+    await syncState.service.upsertToolDocument(syncState.user.id, TOOL_KEY, getChroniclesSnapshot());
+  } catch (error) {
+    console.error(error);
+    dom.syncCluster.dataset.mode = "error";
+    dom.syncMeta.textContent = error.message || "时间轴数据同步失败";
+  } finally {
+    syncState.isSyncing = false;
+    renderSyncUi();
+  }
+}
+
 window.addEventListener("DOMContentLoaded", bootstrap);
 
 async function bootstrap() {
   state.db = await openDatabase();
+  bindSyncUi();
+  syncState.hasLocalCache = await hasChroniclesLocalArchive();
   await seedDatabaseIfNeeded();
   await loadAllData();
   bootstrapSelections();
   bindEvents();
+  await bootstrapSync();
   render();
 }
 
@@ -1071,6 +1280,10 @@ async function seedDatabaseIfNeeded() {
   ]);
 }
 
+async function hasChroniclesLocalArchive() {
+  return (await getAllRecords("timelines")).length > 0;
+}
+
 function getAllRecords(storeName) {
   return new Promise((resolve, reject) => {
     const transaction = state.db.transaction(storeName, "readonly");
@@ -1086,6 +1299,11 @@ function putRecord(storeName, value) {
     const request = transaction.objectStore(storeName).put(value);
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
+    transaction.oncomplete = () => {
+      if (!syncState.isHydrating) {
+        scheduleCloudSync();
+      }
+    };
   });
 }
 
@@ -1093,6 +1311,37 @@ function deleteRecord(storeName, key) {
   return new Promise((resolve, reject) => {
     const transaction = state.db.transaction(storeName, "readwrite");
     const request = transaction.objectStore(storeName).delete(key);
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+    transaction.oncomplete = () => {
+      if (!syncState.isHydrating) {
+        scheduleCloudSync();
+      }
+    };
+  });
+}
+
+async function replaceChroniclesData(payload) {
+  await clearStore("timelines");
+  await clearStore("events");
+  await clearStore("images");
+
+  await Promise.all([
+    ...(Array.isArray(payload.timelines) ? payload.timelines : []).map((item) => putRecord("timelines", item)),
+    ...(Array.isArray(payload.events) ? payload.events : []).map((item) => putRecord("events", item)),
+    ...(Array.isArray(payload.images) ? payload.images : []).map((item) => putRecord("images", item))
+  ]);
+
+  await loadAllData();
+  bootstrapSelections();
+  syncState.hasLocalCache = state.timelines.length > 0;
+  persistUiState();
+}
+
+function clearStore(storeName) {
+  return new Promise((resolve, reject) => {
+    const transaction = state.db.transaction(storeName, "readwrite");
+    const request = transaction.objectStore(storeName).clear();
     request.onsuccess = () => resolve();
     request.onerror = () => reject(request.error);
   });

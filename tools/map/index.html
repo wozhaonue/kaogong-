@@ -17,6 +17,16 @@
           <p class="panel-copy">
             真实省界、真实河湖与真实地形阴影叠加显示，支持城市搜索和山河湖自定义标注。
           </p>
+          <div class="sync-shell" id="sync-shell">
+            <div class="sync-copy">
+              <strong id="sync-title">本地模式</strong>
+              <span id="sync-meta">未配置 Supabase，当前地图标注仅保存在本机浏览器。</span>
+            </div>
+            <div class="sync-actions">
+              <button class="button" id="sync-sign-in" type="button">连接云同步</button>
+              <button class="button" id="sync-sign-out" type="button" hidden>退出同步</button>
+            </div>
+          </div>
         </div>
 
         <div class="panel-section panel-group">
@@ -101,7 +111,29 @@
       </aside>
     </div>
 
+    <dialog class="sync-modal" id="auth-modal">
+      <form class="sync-modal-card" id="auth-form" method="dialog">
+        <div class="sync-modal-head">
+          <div>
+            <p class="eyebrow">Supabase Sync</p>
+            <h2>连接云端同步</h2>
+          </div>
+          <button class="button button-muted sync-close-button" type="submit" value="cancel">关闭</button>
+        </div>
+        <div class="sync-modal-body">
+          <label class="field-label" for="auth-email">邮箱</label>
+          <input id="auth-email" class="text-input" type="email" placeholder="name@example.com" autocomplete="email" />
+          <p class="helper-text">输入已启用 Supabase Auth 的邮箱，系统会发送登录链接。登录后当前地图状态会自动同步。</p>
+        </div>
+        <div class="sync-modal-actions">
+          <button class="button button-muted" type="submit" value="cancel">取消</button>
+          <button class="button button-primary" id="auth-submit" type="submit">发送登录链接</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="../../scripts/vendor-supabase.js"></script>
     <script src="./vendor/maplibre-gl.js?v=2026-07-15-2"></script>
-    <script type="module" src="./app.js?v=2026-07-15-2"></script>
+    <script type="module" src="./app.js?v=2026-07-29-supabase-1"></script>
   </body>
   </html>
