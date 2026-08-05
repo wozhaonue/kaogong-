@@ -672,8 +672,9 @@ function renderTimeline() {
   dom.timelineCanvas.style.minWidth = `${canvasWidth}px`;
 
   events.forEach((record, index) => {
-    const featured = index % 2 === 0;
-    const above = index % 3 !== 2;
+    const featured = true;
+    const above = index % 2 === 0;
+    const stubHeight = [72, 60, 88, 64][index % 4];
 
     const shell = document.createElement("article");
     shell.className = "timeline-event-shell";
@@ -691,31 +692,24 @@ function renderTimeline() {
     }
     shell.append(nodeButton);
 
-    if (featured) {
-      const stub = document.createElement("div");
-      stub.className = `event-stub ${above ? "above" : "below"}`;
-      stub.style.height = above ? "72px" : "56px";
-      shell.append(stub);
+    const stub = document.createElement("div");
+    stub.className = `event-stub ${above ? "above" : "below"}`;
+    stub.style.height = `${stubHeight}px`;
+    shell.append(stub);
 
-      const cardButton = document.createElement("button");
-      cardButton.type = "button";
-      cardButton.className = `event-card-button event-card ${above ? "above" : "below"}`;
-      cardButton.dataset.eventId = record.id;
-      cardButton.innerHTML = `
-        <div class="event-card-image">
-          <img src="${escapeAttribute(getImageSrc(record.imageId))}" alt="${escapeAttribute(record.name)}" />
-        </div>
-        <span class="event-card-era">${escapeHtml(record.time)}</span>
-        <h3>${escapeHtml(record.name)}</h3>
-        <p>${escapeHtml(truncate(record.description || record.artifactName || TEXT.defaultDescription, 112))}</p>
-      `;
-      shell.append(cardButton);
-    } else {
-      const tag = document.createElement("div");
-      tag.className = `event-time-tag ${above ? "below" : "above"}`;
-      tag.textContent = record.time;
-      shell.append(tag);
-    }
+    const cardButton = document.createElement("button");
+    cardButton.type = "button";
+    cardButton.className = `event-card-button event-card ${above ? "above" : "below"}`;
+    cardButton.dataset.eventId = record.id;
+    cardButton.innerHTML = `
+      <div class="event-card-image">
+        <img src="${escapeAttribute(getImageSrc(record.imageId))}" alt="${escapeAttribute(record.name)}" />
+      </div>
+      <span class="event-card-era">${escapeHtml(record.time)}</span>
+      <h3>${escapeHtml(record.name)}</h3>
+      <p class="event-card-description">${escapeHtml(getEventPreviewText(record))}</p>
+    `;
+    shell.append(cardButton);
 
     dom.timelineEvents.append(shell);
   });
@@ -804,7 +798,7 @@ async function handleEventSubmit(event) {
     name: dom.eventName.value.trim(),
     dynasty: dom.eventDynasty.value.trim(),
     artifactName: dom.eventArtifact.value.trim(),
-    description: dom.eventDescription.value.trim()
+    description: dom.eventDescription.value.replace(/\r\n?/g, "\n")
   };
 
   if (!payload.time || !payload.name) {
@@ -1177,6 +1171,13 @@ function pickTimelineIcon(index) {
 function truncate(value, length) {
   const text = String(value || "");
   return text.length > length ? `${text.slice(0, length)}...` : text;
+}
+
+function getEventPreviewText(record) {
+  const source = String(record.description || record.artifactName || TEXT.defaultDescription || "")
+    .replace(/\r\n?/g, "\n")
+    .trim();
+  return truncate(source.replace(/\n{2,}/g, "\n").replace(/\n/g, " "), 148);
 }
 
 function normalize(value) {
