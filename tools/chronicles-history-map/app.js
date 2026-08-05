@@ -4,6 +4,9 @@ const DB_NAME = "chronicles-history-map-v1";
 const DB_VERSION = 1;
 const UI_KEY = "chronicles-history-map-ui-v1";
 const CANVAS_MIN_WIDTH = 3400;
+const CANVAS_TAIL_SPACE_MIN = 960;
+const CANVAS_TAIL_SPACE_FACTOR = 0.92;
+const CANVAS_EDGE_PADDING = 120;
 const TOOL_KEY = "chronicles-history-map";
 
 const TEXT = {
@@ -651,13 +654,17 @@ function renderTimelineHeading() {
 function renderTimeline() {
   dom.timelineEvents.innerHTML = "";
   const timeline = getSelectedTimeline();
+  const timelineEvents = getFilteredEvents();
+  const canvasWidth = getCanvasWidthForEvents(timelineEvents);
+  dom.timelineCanvas.style.width = `${canvasWidth}px`;
+  dom.timelineCanvas.style.minWidth = `${canvasWidth}px`;
+
   if (!timeline) {
     dom.timelineEvents.append(createEmptyState(TEXT.emptyTimelineTitle, TEXT.emptyTimelineCopy));
     return;
   }
 
-  const events = getFilteredEvents();
-  if (!events.length) {
+  if (!timelineEvents.length) {
     dom.timelineEvents.append(
       createEmptyState(
         state.ui.mode === "edit" ? TEXT.emptyEventTitleEdit : TEXT.emptyEventTitleDisplay,
@@ -667,11 +674,7 @@ function renderTimeline() {
     return;
   }
 
-  const canvasWidth = Math.max(CANVAS_MIN_WIDTH, Math.max(...events.map((item) => item.x)) + 600);
-  dom.timelineCanvas.style.width = `${canvasWidth}px`;
-  dom.timelineCanvas.style.minWidth = `${canvasWidth}px`;
-
-  events.forEach((record, index) => {
+  timelineEvents.forEach((record, index) => {
     const featured = true;
     const above = index % 2 === 0;
     const stubHeight = [72, 60, 88, 64][index % 4];
@@ -737,7 +740,7 @@ function handleTimelineClick(event) {
     return;
   }
 
-  state.pendingX = Math.max(120, Math.min(event.clientX - rect.left, rect.width - 120));
+  state.pendingX = Math.max(CANVAS_EDGE_PADDING, Math.min(event.clientX - rect.left, rect.width - CANVAS_EDGE_PADDING));
   openEventSheet();
 }
 
@@ -1171,6 +1174,12 @@ function pickTimelineIcon(index) {
 function truncate(value, length) {
   const text = String(value || "");
   return text.length > length ? `${text.slice(0, length)}...` : text;
+}
+
+function getCanvasWidthForEvents(events) {
+  const maxEventX = events.length ? Math.max(...events.map((item) => Number(item.x) || 0)) : 0;
+  const tailSpace = Math.max(CANVAS_TAIL_SPACE_MIN, Math.ceil((dom.timelineScroll.clientWidth || 0) * CANVAS_TAIL_SPACE_FACTOR));
+  return Math.max(CANVAS_MIN_WIDTH, maxEventX + tailSpace);
 }
 
 function getEventPreviewText(record) {
